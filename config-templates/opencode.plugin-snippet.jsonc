@@ -1,0 +1,18 @@
+{
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git#v5.0.7",
+    // Replace with the absolute path to your local patched oh-my-opencode-slim checkout.
+    // Example: "C:\\path\\to\\oh-my-opencode-slim" or "/path/to/oh-my-opencode-slim"
+    "<LOCAL_OMO_SLIM_PATH>"
+  ],
+  "agent": {
+    "explore": {
+      // Intentionally disabled so the patched OMO Slim worker layout owns this lane.
+      "disable": true
+    },
+    "general": {
+      // Intentionally disabled so the patched OMO Slim worker layout owns this lane.
+      "disable": true
+    }
+  }
+}

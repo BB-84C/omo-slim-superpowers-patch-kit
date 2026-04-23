@@ -1,0 +1,383 @@
+diff --git a/src/agents/index.test.ts b/src/agents/index.test.ts
+index 4c0caa4..1ec2de7 100644
+--- a/src/agents/index.test.ts
++++ b/src/agents/index.test.ts
+@@ -251,13 +251,13 @@ describe('skill permissions', () => {
+     expect(skillPerm?.codemap).not.toBe('allow');
+   });
+ 
+-  test('oracle gets requesting-code-review skill allowed by default', () => {
++  test('oracle does not get requesting-code-review skill allowed by default', () => {
+     const agents = createAgents();
+     const oracle = agents.find((a) => a.name === 'oracle');
+     expect(oracle).toBeDefined();
+     const skillPerm = (oracle?.config.permission as Record<string, unknown>)
+       ?.skill as Record<string, string>;
+-    expect(skillPerm?.['requesting-code-review']).toBe('allow');
++    expect(skillPerm?.['requesting-code-review']).toBe('deny');
+   });
+ 
+   test('oracle gets simplify skill allowed by default', () => {
+diff --git a/src/cli/skills.test.ts b/src/cli/skills.test.ts
+index 2ccbbd5..af8e64a 100644
+--- a/src/cli/skills.test.ts
++++ b/src/cli/skills.test.ts
+@@ -2,33 +2,48 @@ import { describe, expect, it } from 'bun:test';
+ import { getSkillPermissionsForAgent } from './skills';
+ 
+ describe('skills permissions', () => {
+-  it('should allow all skills for orchestrator by default', () => {
++  it('allows non-superpowers skills by default', () => {
++    const permissions = getSkillPermissionsForAgent('designer');
++
++    expect(permissions['*']).toBe('allow');
++    expect(permissions['agent-browser']).toBe('allow');
++    expect(permissions.simplify).toBeUndefined();
++  });
++
++  it('applies superpowers policy for orchestrator', () => {
+     const permissions = getSkillPermissionsForAgent('orchestrator');
++
+     expect(permissions['*']).toBe('allow');
++    expect(permissions.brainstorming).toBe('allow');
++    expect(permissions['writing-plans']).toBe('allow');
++    expect(permissions['using-superpowers']).toBe('deny');
+   });
+ 
+-  it('should deny all skills for other agents by default', () => {
++  it('allows only approved superpowers skills for designer', () => {
+     const permissions = getSkillPermissionsForAgent('designer');
+-    expect(permissions['*']).toBe('deny');
++
++    expect(permissions['test-driven-development']).toBe('allow');
++    expect(permissions['systematic-debugging']).toBe('allow');
++    expect(permissions['verification-before-completion']).toBe('allow');
++    expect(permissions.brainstorming).toBe('deny');
++    expect(permissions['using-superpowers']).toBe('deny');
+   });
+ 
+-  it('should allow recommended skills for specific agents', () => {
+-    // Designer should have agent-browser allowed
+-    const designerPerms = getSkillPermissionsForAgent('designer');
+-    expect(designerPerms['agent-browser']).toBe('allow');
++  it('does not bypass superpowers gating through legacy permission-only skills', () => {
++    const permissions = getSkillPermissionsForAgent('oracle');
+ 
+-    // Oracle should have simplify allowed by default
+-    const oraclePerms = getSkillPermissionsForAgent('oracle');
+-    expect(oraclePerms.simplify).toBe('allow');
++    expect(permissions.simplify).toBe('allow');
++    expect(permissions['receiving-code-review']).toBe('allow');
++    expect(permissions['requesting-code-review']).toBe('deny');
++    expect(permissions['writing-plans']).toBe('deny');
+   });
+ 
+-  it('should honor explicit skill list overrides', () => {
+-    // Override with empty list
++  it('honors explicit skill list overrides', () => {
+     const emptyPerms = getSkillPermissionsForAgent('orchestrator', []);
+     expect(emptyPerms['*']).toBe('deny');
+-    expect(Object.keys(emptyPerms).length).toBe(1);
++    expect(emptyPerms['brainstorming']).toBe('deny');
++    expect(emptyPerms['using-superpowers']).toBe('deny');
+ 
+-    // Override with specific list
+     const specificPerms = getSkillPermissionsForAgent('designer', [
+       'my-skill',
+       '!bad-skill',
+@@ -36,10 +51,35 @@ describe('skills permissions', () => {
+     expect(specificPerms['*']).toBe('deny');
+     expect(specificPerms['my-skill']).toBe('allow');
+     expect(specificPerms['bad-skill']).toBe('deny');
++    expect(specificPerms['test-driven-development']).toBe('deny');
++  });
++
++  it('does not let explicit skill lists grant forbidden superpowers skills', () => {
++    const permissions = getSkillPermissionsForAgent('designer', [
++      'writing-plans',
++      'using-superpowers',
++      'agent-browser',
++    ]);
++
++    expect(permissions['writing-plans']).toBe('deny');
++    expect(permissions['using-superpowers']).toBe('deny');
++    expect(permissions['agent-browser']).toBe('allow');
++  });
++
++  it('lets explicit skill lists narrow otherwise-allowed superpowers skills', () => {
++    const permissions = getSkillPermissionsForAgent('orchestrator', [
++      'brainstorming',
++    ]);
++
++    expect(permissions.brainstorming).toBe('allow');
++    expect(permissions['writing-plans']).toBe('deny');
+   });
+ 
+-  it('should honor wildcard in explicit list', () => {
++  it('honors wildcard in explicit list', () => {
+     const wildcardPerms = getSkillPermissionsForAgent('designer', ['*']);
+     expect(wildcardPerms['*']).toBe('allow');
++    expect(wildcardPerms['writing-plans']).toBe('deny');
++    expect(wildcardPerms['test-driven-development']).toBe('allow');
++    expect(wildcardPerms['using-superpowers']).toBe('deny');
+   });
+ });
+diff --git a/src/cli/skills.ts b/src/cli/skills.ts
+index d880d4a..58505ec 100644
+--- a/src/cli/skills.ts
++++ b/src/cli/skills.ts
+@@ -1,5 +1,6 @@
+ import { spawnSync } from 'node:child_process';
+ import { CUSTOM_SKILLS } from './custom-skills';
++import { buildSuperpowersSkillPermissions } from './superpowers-policy';
+ 
+ /**
+  * A recommended skill to install via `npx skills add`.
+@@ -55,12 +56,6 @@ export const RECOMMENDED_SKILLS: RecommendedSkill[] = [
+  * Entries here only affect agent permission grants — nothing is installed.
+  */
+ export const PERMISSION_ONLY_SKILLS: PermissionOnlySkill[] = [
+-  {
+-    name: 'requesting-code-review',
+-    allowedAgents: ['oracle'],
+-    description:
+-      'Code review template for reviewer subagents in multi-step workflows',
+-  },
+ ];
+ 
+ /**
+@@ -117,27 +112,38 @@ export function getSkillPermissionsForAgent(
+   agentName: string,
+   skillList?: string[],
+ ): Record<string, 'allow' | 'ask' | 'deny'> {
+-  // Orchestrator gets all skills by default, others are restricted
+-  const permissions: Record<string, 'allow' | 'ask' | 'deny'> = {
+-    '*': agentName === 'orchestrator' ? 'allow' : 'deny',
+-  };
++  const superpowersPermissions = buildSuperpowersSkillPermissions(agentName);
+ 
+-  // If the user provided an explicit skill list (even empty), honor it
++  // If the user provided an explicit skill list (even empty), honor it.
+   if (skillList) {
+-    permissions['*'] = 'deny';
++    const explicitPermissions: Record<string, 'allow' | 'ask' | 'deny'> = {
++      '*': 'deny',
++    };
++
+     for (const name of skillList) {
+       if (name === '*') {
+-        permissions['*'] = 'allow';
++        explicitPermissions['*'] = 'allow';
+       } else if (name.startsWith('!')) {
+-        permissions[name.slice(1)] = 'deny';
++        explicitPermissions[name.slice(1)] = 'deny';
+       } else {
+-        permissions[name] = 'allow';
++        explicitPermissions[name] = 'allow';
+       }
+     }
+-    return permissions;
++
++    for (const [name, policy] of Object.entries(superpowersPermissions)) {
++      const explicit = explicitPermissions[name] ?? explicitPermissions['*'];
++      explicitPermissions[name] =
++        policy === 'allow' && explicit === 'allow' ? 'allow' : 'deny';
++    }
++
++    return explicitPermissions;
+   }
+ 
+-  // Otherwise, use recommended defaults
++  const permissions: Record<string, 'allow' | 'ask' | 'deny'> = {
++    '*': 'allow',
++    ...superpowersPermissions,
++  };
++
+   for (const skill of RECOMMENDED_SKILLS) {
+     const isAllowed =
+       skill.allowedAgents.includes('*') ||
+diff --git a/src/cli/superpowers-policy.test.ts b/src/cli/superpowers-policy.test.ts
+new file mode 100644
+index 0000000..14ba734
+--- /dev/null
++++ b/src/cli/superpowers-policy.test.ts
+@@ -0,0 +1,43 @@
++import { describe, expect, it } from 'bun:test';
++import {
++  FALLBACK_SUPERPOWERS_SKILLS,
++  buildSuperpowersSkillPermissions,
++  getAllowedSuperpowersSkillsForAgent,
++} from './superpowers-policy';
++
++describe('superpowers policy', () => {
++  it('grants only implementer-discipline skills to fixer', () => {
++    const allowed = [...getAllowedSuperpowersSkillsForAgent('fixer', FALLBACK_SUPERPOWERS_SKILLS)].sort();
++
++    expect(allowed).toEqual([
++      'systematic-debugging',
++      'test-driven-development',
++      'verification-before-completion',
++    ]);
++  });
++
++  it('grants reviewer skills to oracle and hides controller skills', () => {
++    const permissions = buildSuperpowersSkillPermissions('oracle', FALLBACK_SUPERPOWERS_SKILLS);
++
++    expect(permissions['systematic-debugging']).toBe('allow');
++    expect(permissions['verification-before-completion']).toBe('allow');
++    expect(permissions['receiving-code-review']).toBe('allow');
++    expect(permissions['writing-plans']).toBe('deny');
++    expect(permissions['subagent-driven-development']).toBe('deny');
++  });
++
++  it('keeps using-superpowers bootstrap-only even for orchestrator', () => {
++    const permissions = buildSuperpowersSkillPermissions('orchestrator', FALLBACK_SUPERPOWERS_SKILLS);
++
++    expect(permissions['brainstorming']).toBe('allow');
++    expect(permissions['writing-plans']).toBe('allow');
++    expect(permissions['using-superpowers']).toBe('deny');
++  });
++
++  it('fails safe for unknown future superpowers skills', () => {
++    const futureSkills = [...FALLBACK_SUPERPOWERS_SKILLS, 'future-superpowers-skill'];
++
++    expect(buildSuperpowersSkillPermissions('fixer', futureSkills)['future-superpowers-skill']).toBe('deny');
++    expect(buildSuperpowersSkillPermissions('orchestrator', futureSkills)['future-superpowers-skill']).toBe('allow');
++  });
++});
+diff --git a/src/cli/superpowers-policy.ts b/src/cli/superpowers-policy.ts
+new file mode 100644
+index 0000000..9ef8e30
+--- /dev/null
++++ b/src/cli/superpowers-policy.ts
+@@ -0,0 +1,130 @@
++import { existsSync, readdirSync, readFileSync } from 'node:fs';
++import { homedir } from 'node:os';
++import { join } from 'node:path';
++
++export const FALLBACK_SUPERPOWERS_SKILLS = [
++  'brainstorming',
++  'dispatching-parallel-agents',
++  'executing-plans',
++  'finishing-a-development-branch',
++  'receiving-code-review',
++  'requesting-code-review',
++  'subagent-driven-development',
++  'systematic-debugging',
++  'test-driven-development',
++  'using-git-worktrees',
++  'using-superpowers',
++  'verification-before-completion',
++  'writing-plans',
++  'writing-skills',
++] as const;
++
++const AGENT_ALLOWED_SUPERPOWERS: Record<string, string[]> = {
++  orchestrator: FALLBACK_SUPERPOWERS_SKILLS.filter(
++    (name) => name !== 'using-superpowers',
++  ),
++  fixer: [
++    'test-driven-development',
++    'systematic-debugging',
++    'verification-before-completion',
++  ],
++  designer: [
++    'test-driven-development',
++    'systematic-debugging',
++    'verification-before-completion',
++  ],
++  oracle: [
++    'systematic-debugging',
++    'verification-before-completion',
++    'receiving-code-review',
++  ],
++  explorer: [],
++  librarian: [],
++  observer: [],
++  council: [],
++  councillor: [],
++};
++
++let cachedSuperpowersSkills: string[] | null = null;
++
++function getOpencodeConfigDir(): string {
++  const custom = process.env.OPENCODE_CONFIG_DIR?.trim();
++  return custom || join(homedir(), '.config', 'opencode');
++}
++
++function extractSkillName(skillDirPath: string, fallbackName: string): string {
++  const skillFile = join(skillDirPath, 'SKILL.md');
++  if (!existsSync(skillFile)) {
++    return fallbackName;
++  }
++
++  const content = readFileSync(skillFile, 'utf8');
++  const match = content.match(/(?:^|\n)name:\s*["']?([^"'\r\n]+)["']?/);
++  return match?.[1]?.trim() || fallbackName;
++}
++
++export function discoverSuperpowersSkillNames(): string[] {
++  if (cachedSuperpowersSkills) {
++    return [...cachedSuperpowersSkills];
++  }
++
++  const skillsRoot = join(getOpencodeConfigDir(), 'superpowers', 'skills');
++  if (!existsSync(skillsRoot)) {
++    cachedSuperpowersSkills = [...FALLBACK_SUPERPOWERS_SKILLS];
++    return [...cachedSuperpowersSkills];
++  }
++
++  const discovered = readdirSync(skillsRoot, { withFileTypes: true })
++    .filter((entry) => entry.isDirectory())
++    .map((entry) => extractSkillName(join(skillsRoot, entry.name), entry.name))
++    .filter(Boolean);
++
++  cachedSuperpowersSkills = discovered.length
++    ? [...new Set(discovered)].sort()
++    : [...FALLBACK_SUPERPOWERS_SKILLS];
++
++  return [...cachedSuperpowersSkills];
++}
++
++export function getAllowedSuperpowersSkillsForAgent(
++  agentName: string,
++  superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
++): Set<string> {
++  if (agentName === 'orchestrator') {
++    return new Set(superpowersSkills.filter((name) => name !== 'using-superpowers'));
++  }
++
++  const explicit = new Set(AGENT_ALLOWED_SUPERPOWERS[agentName] ?? []);
++  const allowed = new Set<string>();
++
++  for (const skill of superpowersSkills) {
++    if (skill === 'using-superpowers') {
++      continue;
++    }
++
++    if (explicit.has(skill)) {
++      allowed.add(skill);
++    }
++  }
++
++  return allowed;
++}
++
++export function buildSuperpowersSkillPermissions(
++  agentName: string,
++  superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
++): Record<string, 'allow' | 'deny'> {
++  const permissions: Record<string, 'allow' | 'deny'> = {};
++  const allowed = getAllowedSuperpowersSkillsForAgent(agentName, superpowersSkills);
++
++  for (const skill of superpowersSkills) {
++    if (skill === 'using-superpowers') {
++      permissions[skill] = 'deny';
++      continue;
++    }
++
++    permissions[skill] = allowed.has(skill) ? 'allow' : 'deny';
++  }
++
++  return permissions;
++}

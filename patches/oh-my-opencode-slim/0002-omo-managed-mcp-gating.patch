@@ -1,0 +1,200 @@
+diff --git a/src/config/agent-mcps.test.ts b/src/config/agent-mcps.test.ts
+index 8e6d5df..3bd44c2 100644
+--- a/src/config/agent-mcps.test.ts
++++ b/src/config/agent-mcps.test.ts
+@@ -1,5 +1,10 @@
+ import { describe, expect, test } from 'bun:test';
+-import { DEFAULT_AGENT_MCPS, parseList } from './agent-mcps';
++import {
++  DEFAULT_AGENT_MCPS,
++  buildAgentMcpPermissionRules,
++  getManagedMcpNames,
++  parseList,
++} from './agent-mcps';
+ 
+ describe('parseList', () => {
+   test('empty list returns empty array', () => {
+@@ -51,4 +56,24 @@ describe('parseList', () => {
+   test('exclusions without matching allows', () => {
+     expect(parseList(['!mcp2'], ['mcp1', 'mcp2', 'mcp3'])).toEqual([]);
+   });
++
++  test('managed permission rules ignore custom mcps', () => {
++    const rules = buildAgentMcpPermissionRules([], {
++      websearch: true,
++      context7: true,
++      grep_app: true,
++      'windows-mcp': true,
++    });
++
++    expect(rules).toEqual({
++      'websearch_*': 'deny',
++      'context7_*': 'deny',
++      'grep_app_*': 'deny',
++    });
++    expect('windows-mcp' in rules).toBe(false);
++  });
++
++  test('managed mcp names are built-in only', () => {
++    expect(getManagedMcpNames()).toEqual(['websearch', 'context7', 'grep_app']);
++  });
+ });
+diff --git a/src/config/agent-mcps.ts b/src/config/agent-mcps.ts
+index 166f220..fcab12e 100644
+--- a/src/config/agent-mcps.ts
++++ b/src/config/agent-mcps.ts
+@@ -46,8 +46,12 @@ export function parseList(items: string[], allAvailable: string[]): string[] {
+ /**
+  * Get available MCP names from schema and config.
+  */
++export function getManagedMcpNames(): string[] {
++  return McpNameSchema.options;
++}
++
+ export function getAvailableMcpNames(config?: PluginConfig): string[] {
+-  const builtinMcps = McpNameSchema.options;
++  const builtinMcps = getManagedMcpNames();
+   const disabled = new Set(config?.disabled_mcps ?? []);
+   return builtinMcps.filter((name) => !disabled.has(name));
+ }
+@@ -55,6 +59,27 @@ export function getAvailableMcpNames(config?: PluginConfig): string[] {
+ /**
+  * Get the MCP list for an agent (from config or defaults).
+  */
++
++/**
++ * Build agent permission rules for managed MCPs only.
++ */
++export function buildAgentMcpPermissionRules(
++  agentMcps: string[],
++  existingPermissions: Record<string, unknown> = {},
++): Record<string, 'allow' | 'deny'> {
++  const rules: Record<string, 'allow' | 'deny'> = {};
++  const allowedMcps = parseList(agentMcps, getManagedMcpNames());
++
++  for (const mcpName of getManagedMcpNames()) {
++    const sanitizedMcpName = mcpName.replace(/[^a-zA-Z0-9_-]/g, '_');
++    const permissionKey = `${sanitizedMcpName}_*`;
++    if (permissionKey in existingPermissions) continue;
++    rules[permissionKey] = allowedMcps.includes(mcpName) ? 'allow' : 'deny';
++  }
++
++  return rules;
++}
++
+ export function getAgentMcpList(
+   agentName: string,
+   config?: PluginConfig,
+diff --git a/src/index.ts b/src/index.ts
+index 0e2a881..005397a 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -2,7 +2,7 @@ import type { Plugin } from '@opencode-ai/plugin';
+ import { createAgents, getAgentConfigs, getDisabledAgents } from './agents';
+ import { buildOrchestratorPrompt } from './agents/orchestrator';
+ import { loadPluginConfig, type MultiplexerConfig } from './config';
+-import { parseList } from './config/agent-mcps';
++import { buildAgentMcpPermissionRules } from './config/agent-mcps';
+ import { CouncilManager } from './council';
+ import {
+   createApplyPatchHook,
+@@ -31,6 +31,7 @@ import {
+   createPresetManager,
+   createWebfetchTool,
+ } from './tools';
++import { collapseSystemInPlace } from './utils/system-collapse';
+ import { resolveRuntimeAgentName, rewriteDisplayNameMentions } from './utils';
+ import { initLogger, log } from './utils/logger';
+ import { SubagentDepthTracker } from './utils/subagent-depth';
+@@ -461,13 +462,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+         Object.assign(configMcp, mcps);
+       }
+ 
+-      // Get all MCP names from the merged config (built-in + custom)
+-      const mergedMcpConfig = opencodeConfig.mcp as
+-        | Record<string, unknown>
+-        | undefined;
+-      const allMcpNames = Object.keys(mergedMcpConfig ?? mcps);
+-
+-      // For each agent, create permission rules based on their mcps list
++      // For each agent, create permission rules based on their mcps list.
++      // Only OMO-managed built-in MCPs are covered here; custom MCPs stay
++      // untouched.
+       for (const [agentName, agentConfig] of Object.entries(agents)) {
+         const agentMcps = (agentConfig as { mcps?: string[] })?.mcps;
+         if (!agentMcps) continue;
+@@ -485,21 +482,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+           unknown
+         >;
+ 
+-        // Parse mcps list with wildcard and exclusion support
+-        const allowedMcps = parseList(agentMcps, allMcpNames);
+-
+-        // Create permission rules for each MCP
+-        // MCP tools are named as <server>_<tool>, so we use <server>_*
+-        for (const mcpName of allMcpNames) {
+-          const sanitizedMcpName = mcpName.replace(/[^a-zA-Z0-9_-]/g, '_');
+-          const permissionKey = `${sanitizedMcpName}_*`;
+-          const action = allowedMcps.includes(mcpName) ? 'allow' : 'deny';
+-
+-          // Only set if not already defined by user
+-          if (!(permissionKey in agentPermission)) {
+-            agentPermission[permissionKey] = action;
+-          }
+-        }
++        Object.assign(
++          agentPermission,
++          buildAgentMcpPermissionRules(agentMcps, agentPermission),
++        );
+ 
+         // Update agent config with permissions
+         agentConfigEntry.permission = agentPermission;
+@@ -721,8 +707,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+       // system messages. Sub-hooks above may push additional entries; join
+       // them back into one element so OpenCode emits a single system
+       // message.
+-      const joined = output.system.join('\n\n');
+-      output.system = joined ? [joined] : [];
++      collapseSystemInPlace(output.system);
+     },
+ 
+     // Inject phase reminder and filter available skills before sending to
+diff --git a/src/utils/system-collapse.test.ts b/src/utils/system-collapse.test.ts
+new file mode 100644
+index 0000000..8f17067
+--- /dev/null
++++ b/src/utils/system-collapse.test.ts
+@@ -0,0 +1,20 @@
++import { describe, expect, test } from 'bun:test';
++import { collapseSystemInPlace } from './system-collapse';
++
++describe('collapseSystemInPlace', () => {
++  test('joins multiple system messages in place', () => {
++    const system = ['alpha', 'beta'];
++
++    collapseSystemInPlace(system);
++
++    expect(system).toEqual(['alpha\n\nbeta']);
++  });
++
++  test('removes empty system messages', () => {
++    const system = ['', ''];
++
++    collapseSystemInPlace(system);
++
++    expect(system).toEqual([]);
++  });
++});
+diff --git a/src/utils/system-collapse.ts b/src/utils/system-collapse.ts
+new file mode 100644
+index 0000000..edf1514
+--- /dev/null
++++ b/src/utils/system-collapse.ts
+@@ -0,0 +1,7 @@
++/**
++ * Collapse a mutable system-message array to a single provider-safe entry.
++ */
++export function collapseSystemInPlace(system: string[]): void {
++  const joined = system.filter(Boolean).join('\n\n');
++  system.splice(0, system.length, ...(joined ? [joined] : []));
++}

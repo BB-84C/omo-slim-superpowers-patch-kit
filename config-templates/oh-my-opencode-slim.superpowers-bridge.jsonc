@@ -1,0 +1,73 @@
+{
+  "$schema": "https://unpkg.com/oh-my-opencode-slim@1.0.1/oh-my-opencode-slim.schema.json",
+  "preset": "superpowers-bridge",
+  "disabled_agents": [],
+  "showStartupToast": false,
+  "presets": {
+    "superpowers-bridge": {
+      "orchestrator": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "mcps": ["*", "!context7"]
+      },
+      "oracle": {
+        "model": "openai/gpt-5.4",
+        "variant": "xhigh",
+        "mcps": []
+      },
+      "librarian": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "xhigh",
+        "mcps": ["websearch", "context7", "grep_app"]
+      },
+      "explorer": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "xhigh",
+        "mcps": []
+      },
+      "designer": {
+        "model": "openai/gpt-5.4",
+        "variant": "medium",
+        "mcps": []
+      },
+      "fixer": {
+        "model": "openai/gpt-5.4",
+        "variant": "medium",
+        "mcps": []
+      },
+      "observer": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "low",
+        "mcps": []
+      },
+      "council": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "mcps": []
+      },
+      "councillor": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "high",
+        "mcps": []
+      }
+    }
+  },
+  "council": {
+    "default_preset": "default",
+    "councillor_execution_mode": "serial",
+    "presets": {
+      "default": {
+        "alpha": {
+          "model": "openai/gpt-5.4-mini",
+          "variant": "high",
+          "prompt": "You are a conservative review councillor. Prioritize correctness, scope control, and workflow preservation."
+        },
+        "beta": {
+          "model": "openai/gpt-5.4-mini",
+          "variant": "high",
+          "prompt": "You are a contrarian review councillor. Look for hidden assumptions, integration risks, and reviewer blind spots."
+        }
+      }
+    }
+  }
+}

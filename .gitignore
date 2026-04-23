@@ -1,0 +1,18 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python / Node noise
+__pycache__/
+*.pyc
+node_modules/
+dist/
+
+# Local scratch
+*.bak
+*.orig
+*.rej
+*.tmp
+tool-output/

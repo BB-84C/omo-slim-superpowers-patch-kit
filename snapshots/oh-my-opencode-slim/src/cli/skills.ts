@@ -1,0 +1,177 @@
+import { spawnSync } from 'node:child_process';
+import { CUSTOM_SKILLS } from './custom-skills';
+import { buildSuperpowersSkillPermissions } from './superpowers-policy';
+
+/**
+ * A recommended skill to install via `npx skills add`.
+ */
+export interface RecommendedSkill {
+  /** Human-readable name for prompts */
+  name: string;
+  /** GitHub repo URL for `npx skills add` */
+  repo: string;
+  /** Skill name within the repo (--skill flag) */
+  skillName: string;
+  /** List of agents that should auto-allow this skill */
+  allowedAgents: string[];
+  /** Description shown to user during install */
+  description: string;
+  /** Optional commands to run after the skill is added */
+  postInstallCommands?: string[];
+}
+
+/**
+ * A skill that is managed externally (e.g. user-installed) and needs
+ * permission grants but is NOT installed by this plugin's CLI.
+ */
+export interface PermissionOnlySkill {
+  /** Skill name — must match the name OpenCode uses for permission checks */
+  name: string;
+  /** List of agents that should auto-allow this skill */
+  allowedAgents: string[];
+  /** Human-readable description (for documentation only) */
+  description: string;
+}
+
+/**
+ * List of recommended skills.
+ * Add new skills here to include them in the installation flow.
+ */
+export const RECOMMENDED_SKILLS: RecommendedSkill[] = [
+  {
+    name: 'agent-browser',
+    repo: 'https://github.com/vercel-labs/agent-browser',
+    skillName: 'agent-browser',
+    allowedAgents: ['designer'],
+    description: 'High-performance browser automation',
+    postInstallCommands: [
+      'npm install -g agent-browser',
+      'agent-browser install',
+    ],
+  },
+];
+
+/**
+ * Skills managed externally (not installed by this plugin's CLI).
+ * Entries here only affect agent permission grants — nothing is installed.
+ */
+export const PERMISSION_ONLY_SKILLS: PermissionOnlySkill[] = [
+];
+
+/**
+ * Install a skill using `npx skills add`.
+ * @param skill - The skill to install
+ * @returns True if installation succeeded, false otherwise
+ */
+export function installSkill(skill: RecommendedSkill): boolean {
+  const args = [
+    'skills',
+    'add',
+    skill.repo,
+    '--skill',
+    skill.skillName,
+    '-a',
+    'opencode',
+    '-y',
+    '--global',
+  ];
+
+  try {
+    const result = spawnSync('npx', args, { stdio: 'inherit' });
+    if (result.status !== 0) {
+      return false;
+    }
+
+    // Run post-install commands if any
+    if (skill.postInstallCommands && skill.postInstallCommands.length > 0) {
+      console.log(`Running post-install commands for ${skill.name}...`);
+      for (const cmd of skill.postInstallCommands) {
+        console.log(`> ${cmd}`);
+        const [command, ...cmdArgs] = cmd.split(' ');
+        const cmdResult = spawnSync(command, cmdArgs, { stdio: 'inherit' });
+        if (cmdResult.status !== 0) {
+          console.warn(`Post-install command failed: ${cmd}`);
+        }
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Failed to install skill: ${skill.name}`, error);
+    return false;
+  }
+}
+
+/**
+ * Get permission presets for a specific agent based on recommended skills.
+ * @param agentName - The name of the agent
+ * @param skillList - Optional explicit list of skills to allow (overrides recommendations)
+ * @returns Permission rules for the skill permission type
+ */
+export function getSkillPermissionsForAgent(
+  agentName: string,
+  skillList?: string[],
+): Record<string, 'allow' | 'ask' | 'deny'> {
+  const superpowersPermissions = buildSuperpowersSkillPermissions(agentName);
+
+  // If the user provided an explicit skill list (even empty), honor it.
+  if (skillList) {
+    const explicitPermissions: Record<string, 'allow' | 'ask' | 'deny'> = {
+      '*': 'deny',
+    };
+
+    for (const name of skillList) {
+      if (name === '*') {
+        explicitPermissions['*'] = 'allow';
+      } else if (name.startsWith('!')) {
+        explicitPermissions[name.slice(1)] = 'deny';
+      } else {
+        explicitPermissions[name] = 'allow';
+      }
+    }
+
+    for (const [name, policy] of Object.entries(superpowersPermissions)) {
+      const explicit = explicitPermissions[name] ?? explicitPermissions['*'];
+      explicitPermissions[name] =
+        policy === 'allow' && explicit === 'allow' ? 'allow' : 'deny';
+    }
+
+    return explicitPermissions;
+  }
+
+  const permissions: Record<string, 'allow' | 'ask' | 'deny'> = {
+    '*': 'allow',
+    ...superpowersPermissions,
+  };
+
+  for (const skill of RECOMMENDED_SKILLS) {
+    const isAllowed =
+      skill.allowedAgents.includes('*') ||
+      skill.allowedAgents.includes(agentName);
+    if (isAllowed) {
+      permissions[skill.skillName] = 'allow';
+    }
+  }
+
+  // Apply permissions from bundled custom skills
+  for (const skill of CUSTOM_SKILLS) {
+    const isAllowed =
+      skill.allowedAgents.includes('*') ||
+      skill.allowedAgents.includes(agentName);
+    if (isAllowed) {
+      permissions[skill.name] = 'allow';
+    }
+  }
+
+  // Apply permissions for externally-managed skills (not installed by this plugin)
+  for (const skill of PERMISSION_ONLY_SKILLS) {
+    const isAllowed =
+      skill.allowedAgents.includes('*') ||
+      skill.allowedAgents.includes(agentName);
+    if (isAllowed) {
+      permissions[skill.name] = 'allow';
+    }
+  }
+
+  return permissions;
+}
