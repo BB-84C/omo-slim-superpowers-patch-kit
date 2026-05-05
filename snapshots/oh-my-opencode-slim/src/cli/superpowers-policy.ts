@@ -43,7 +43,41 @@ const AGENT_ALLOWED_SUPERPOWERS: Record<string, string[]> = {
   observer: [],
   council: [],
   councillor: [],
+  // Best-of-N utility agents (custom; fall-through default = empty allowed)
+  scout: [],
+  validator: ['verification-before-completion'],
+  gist: [],
+  wildcard: [],
 };
+
+/**
+ * Resolve a possibly-suffixed agent name to its base name for policy lookup.
+ * Variant agents like "fixer-alpha", "oracle-gamma", "designer-delta" map to
+ * their base "fixer", "oracle", "designer" respectively, so they inherit the
+ * base agent's superpowers permission policy without needing to be listed
+ * explicitly in AGENT_ALLOWED_SUPERPOWERS.
+ *
+ * Names that are already in the policy map are returned as-is (no stripping).
+ * Names whose base prefix is not in the map are returned unchanged (will
+ * fall through to empty-allowed default).
+ *
+ * Examples:
+ *   "fixer-alpha"  -> "fixer"     (suffix-stripped)
+ *   "fixer"        -> "fixer"     (already in map)
+ *   "validator"    -> "validator" (already in map, no strip)
+ *   "scout"        -> "scout"     (already in map)
+ *   "unknown-foo"  -> "unknown-foo" (no match; empty allowed by default)
+ */
+export function resolveBaseAgentName(agentName: string): string {
+  if (agentName in AGENT_ALLOWED_SUPERPOWERS) {
+    return agentName;
+  }
+  const baseName = agentName.split('-')[0];
+  if (baseName in AGENT_ALLOWED_SUPERPOWERS) {
+    return baseName;
+  }
+  return agentName;
+}
 
 let cachedSuperpowersSkills: string[] | null = null;
 
@@ -90,11 +124,15 @@ export function getAllowedSuperpowersSkillsForAgent(
   agentName: string,
   superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
 ): Set<string> {
-  if (agentName === 'orchestrator') {
+  // Resolve variant suffix names (e.g., "fixer-alpha" -> "fixer") so they
+  // inherit the base agent's policy without per-variant entries.
+  const resolvedName = resolveBaseAgentName(agentName);
+
+  if (resolvedName === 'orchestrator') {
     return new Set(superpowersSkills.filter((name) => name !== 'using-superpowers'));
   }
 
-  const explicit = new Set(AGENT_ALLOWED_SUPERPOWERS[agentName] ?? []);
+  const explicit = new Set(AGENT_ALLOWED_SUPERPOWERS[resolvedName] ?? []);
   const allowed = new Set<string>();
 
   for (const skill of superpowersSkills) {

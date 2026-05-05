@@ -49,6 +49,126 @@
         "model": "openai/gpt-5.4-mini",
         "variant": "high",
         "mcps": []
+      },
+
+      // ============ Best-of-N variant agents (16) ============
+      // Each variant runs the same base prompt as its base agent (see
+      // opencode-config/prompts/<base>-base.md and the markdown files
+      // under opencode-config/agents/) but with a different model for
+      // diversity. Superpowers skill policy is auto-inherited via
+      // resolveBaseAgentName() (suffix-stripping). See patch 0003.
+      // The orchestratorPrompt teaches the controller when to dispatch.
+      // Models below are example defaults — adjust to your provider catalog.
+
+      "fixer-alpha": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "orchestratorPrompt": "@fixer-alpha\n- Best-of-N variant of @fixer. OpenAI flagship lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "fixer-beta": {
+        "model": "anthropic/claude-opus-4",
+        "variant": "high",
+        "orchestratorPrompt": "@fixer-beta\n- Best-of-N variant of @fixer. Anthropic flagship lane (vendor diversity).\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "fixer-gamma": {
+        "model": "openai/gpt-5.4",
+        "variant": "xhigh",
+        "orchestratorPrompt": "@fixer-gamma\n- Best-of-N variant of @fixer. OpenAI deep-analysis lane (xhigh reasoning effort).\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "fixer-delta": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "high",
+        "orchestratorPrompt": "@fixer-delta\n- Best-of-N NAIVE CHALLENGER variant of @fixer. Deliberately lighter model for simple-baseline diversity.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration. Surfaces 'maybe the obvious simple thing is right' candidates that stronger variants overthink past."
+      },
+
+      "oracle-alpha": {
+        "model": "openai/gpt-5.4",
+        "variant": "xhigh",
+        "orchestratorPrompt": "@oracle-alpha\n- Best-of-N variant of @oracle. OpenAI deep-reasoning lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration. Multi-candidate verdict format applies."
+      },
+      "oracle-beta": {
+        "model": "anthropic/claude-opus-4",
+        "variant": "high",
+        "orchestratorPrompt": "@oracle-beta\n- Best-of-N variant of @oracle. Anthropic flagship review lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "oracle-gamma": {
+        "model": "openai/gpt-5.4",
+        "variant": "xhigh",
+        "orchestratorPrompt": "@oracle-gamma\n- Best-of-N variant of @oracle. OpenAI alt-gen deep-analysis lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "oracle-delta": {
+        "model": "anthropic/claude-sonnet-4",
+        "variant": "high",
+        "orchestratorPrompt": "@oracle-delta\n- Best-of-N variant of @oracle. Anthropic mid-tier diversity lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+
+      "designer-alpha": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "orchestratorPrompt": "@designer-alpha\n- Best-of-N variant of @designer. OpenAI flagship lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "designer-beta": {
+        "model": "anthropic/claude-opus-4",
+        "variant": "high",
+        "orchestratorPrompt": "@designer-beta\n- Best-of-N variant of @designer. Anthropic flagship lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "designer-gamma": {
+        "model": "openai/gpt-5.4",
+        "variant": "xhigh",
+        "orchestratorPrompt": "@designer-gamma\n- Best-of-N variant of @designer. OpenAI deep-reasoning lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+      "designer-delta": {
+        "model": "anthropic/claude-sonnet-4",
+        "variant": "high",
+        "orchestratorPrompt": "@designer-delta\n- Best-of-N variant of @designer. Anthropic mid-tier lane.\n- Dispatch ONLY via best-of-n-with-judge skill orchestration."
+      },
+
+      "explorer-alpha": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "orchestratorPrompt": "@explorer-alpha\n- Variant of @explorer for best-of-N or ideation fan-out. Primary recon lane.\n- Dispatch via best-of-n-with-judge ideation sub-mode or fan-out skill orchestration, not directly."
+      },
+      "explorer-beta": {
+        "model": "anthropic/claude-sonnet-4",
+        "variant": "high",
+        "orchestratorPrompt": "@explorer-beta\n- Variant of @explorer for best-of-N or ideation fan-out. Vendor-diverse recon lane.\n- Dispatch via best-of-n-with-judge ideation sub-mode or fan-out skill orchestration, not directly."
+      },
+
+      "librarian-alpha": {
+        "model": "anthropic/claude-opus-4",
+        "variant": "high",
+        "mcps": ["websearch", "context7", "grep_app"],
+        "orchestratorPrompt": "@librarian-alpha\n- Variant of @librarian for best-of-N or ideation fan-out. Primary research lane.\n- Dispatch via best-of-n-with-judge ideation sub-mode or fan-out skill orchestration, not directly."
+      },
+      "librarian-beta": {
+        "model": "openai/gpt-5.4",
+        "variant": "high",
+        "mcps": ["websearch", "context7", "grep_app"],
+        "orchestratorPrompt": "@librarian-beta\n- Variant of @librarian for best-of-N or ideation fan-out. Vendor-diverse research lane.\n- Dispatch via best-of-n-with-judge ideation sub-mode or fan-out skill orchestration, not directly."
+      },
+
+      // ============ Fast-lane utility agents (4) ============
+      // Latency-optimized narrow-scope agents. NOT in best-of-N pool.
+      // scout / gist / wildcard get empty allowed superpowers; validator
+      // gets verification-before-completion (see patch 0003).
+      // Their full prompts live in opencode-config/agents/<name>.md.
+
+      "scout": {
+        "model": "anthropic/claude-haiku-4",
+        "orchestratorPrompt": "@scout\n- Latency-optimized narrow lookup utility. Haiku-tier.\n- Use for: 'which file contains X', 'what's at file:line', 'is there a Y anywhere'.\n- Returns 1-sentence answer with file:line, or 'REQUIRES_DEEPER_AGENT' if the question needs deep investigation.\n- Don't use for: race conditions, multi-repo correlation, subtle pattern matching. Dispatch @explorer instead."
+      },
+      "validator": {
+        "model": "openai/gpt-5.4-mini",
+        "orchestratorPrompt": "@validator\n- Format and syntax checker. Mini-tier.\n- Use for: 'is this valid JSON', 'does this YAML parse', 'is this regex syntactically valid'.\n- Returns VALID / INVALID / REQUIRES_DEEPER_AGENT. Does not propose fixes.\n- Don't use for: debugging deserialization, 'what's wrong with this regex'. Dispatch @oracle instead."
+      },
+      "gist": {
+        "model": "anthropic/claude-haiku-4",
+        "orchestratorPrompt": "@gist\n- Fast file/function summarizer. Haiku-tier.\n- Use for: 'in 3 lines what does this file do', 'what is this function for', quick context retrieval before deep dive.\n- Returns 3-line summary or REQUIRES_DEEPER_AGENT.\n- Don't use for: design analysis, intent reasoning, quality critique. Dispatch @oracle instead."
+      },
+      "wildcard": {
+        "model": "openai/gpt-5.4-mini",
+        "variant": "high",
+        "orchestratorPrompt": "@wildcard\n- Divergent ideation contributor. Mini-tier with high temperature.\n- Use ONLY in brainstorming Phase 4 ideation fan-out alongside oracle/librarian/explorer/designer alpha-variants.\n- Proposes naive / contrarian / cross-domain / constraint-flipping ideas that domain experts overthink past.\n- DO NOT use for implementation, recon, or any task outside ideation."
       }
     }
   },

@@ -49,11 +49,17 @@ That snippet intentionally disables the default OpenCode `general` and `explore`
    git checkout v1.0.1
    ```
 
-2. Apply both publication patch files from this repo:
+2. Apply the publication patch files from this repo:
 
    ```bash
    git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0001-superpowers-skill-gating.patch
    git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0002-omo-managed-mcp-gating.patch
+   ```
+
+   Optional — apply patch 0003 ONLY if you intend to install the best-of-N + fast-lane example setup from `opencode-config/`:
+
+   ```bash
+   git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0003-best-of-n-agent-name-resolution.patch
    ```
 
 3. If patch hunks fail, compare the affected files against `snapshots/` and port the changes manually.
@@ -86,6 +92,30 @@ This kit is designed to restrict only:
 
 - `superpowers` skills
 - OMO-managed built-in MCPs (`websearch`, `context7`, `grep_app`)
+
+## Optional: install the best-of-N + fast-lane example setup
+
+If you applied patch 0003 in step 2 above, you can also install the example best-of-N + fast-lane configuration from `opencode-config/`:
+
+1. Copy agent markdown files:
+
+   ```bash
+   cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/agents/* ~/.config/opencode/agents/
+   cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/prompts/* ~/.config/opencode/prompts/
+   cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/skills/best-of-n-with-judge ~/.config/opencode/skills/
+   ```
+
+   On Windows: `Copy-Item -Recurse` with the equivalent paths.
+
+2. Merge the 20 new agent entries from the updated `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into your existing OMO Slim config. The new entries are at the bottom of the `presets.superpowers-bridge` block, with `// ============ Best-of-N variant agents (16) ============` and `// ============ Fast-lane utility agents (4) ============` separators.
+
+3. Rebuild your patched local OMO Slim checkout (`bun run build`) so patch 0003's source changes take effect.
+
+4. Restart OpenCode.
+
+5. Optional: review the design and implementation plan docs at `opencode-config/docs/plans/` for the maintainer's full reasoning behind the variant assignments and skill design.
+
+The 20 new agents will be discovered by OMO Slim's `getCustomAgentNames()` mechanism (same code path as `laborer`). Variant agents inherit base superpowers via patch 0003's `resolveBaseAgentName()`. Markdown files at `~/.config/opencode/agents/` carry `hidden`/`permission`/`mode` (OpenCode-native fields OMO Slim does not manage).
 
 ## If your version differs
 

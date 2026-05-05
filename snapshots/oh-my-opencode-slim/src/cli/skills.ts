@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { CUSTOM_SKILLS } from './custom-skills';
-import { buildSuperpowersSkillPermissions } from './superpowers-policy';
+import {
+  buildSuperpowersSkillPermissions,
+  resolveBaseAgentName,
+} from './superpowers-policy';
 
 /**
  * A recommended skill to install via `npx skills add`.
@@ -144,10 +147,16 @@ export function getSkillPermissionsForAgent(
     ...superpowersPermissions,
   };
 
+  // Resolve variant suffix names (e.g., "fixer-alpha" -> "fixer") so variants
+  // inherit base-agent allowedAgents matches without explicit per-variant
+  // entries in CUSTOM_SKILLS / RECOMMENDED_SKILLS / PERMISSION_ONLY_SKILLS.
+  const resolvedAgentName = resolveBaseAgentName(agentName);
+
   for (const skill of RECOMMENDED_SKILLS) {
     const isAllowed =
       skill.allowedAgents.includes('*') ||
-      skill.allowedAgents.includes(agentName);
+      skill.allowedAgents.includes(agentName) ||
+      skill.allowedAgents.includes(resolvedAgentName);
     if (isAllowed) {
       permissions[skill.skillName] = 'allow';
     }
@@ -157,7 +166,8 @@ export function getSkillPermissionsForAgent(
   for (const skill of CUSTOM_SKILLS) {
     const isAllowed =
       skill.allowedAgents.includes('*') ||
-      skill.allowedAgents.includes(agentName);
+      skill.allowedAgents.includes(agentName) ||
+      skill.allowedAgents.includes(resolvedAgentName);
     if (isAllowed) {
       permissions[skill.name] = 'allow';
     }
@@ -167,7 +177,8 @@ export function getSkillPermissionsForAgent(
   for (const skill of PERMISSION_ONLY_SKILLS) {
     const isAllowed =
       skill.allowedAgents.includes('*') ||
-      skill.allowedAgents.includes(agentName);
+      skill.allowedAgents.includes(agentName) ||
+      skill.allowedAgents.includes(resolvedAgentName);
     if (isAllowed) {
       permissions[skill.name] = 'allow';
     }

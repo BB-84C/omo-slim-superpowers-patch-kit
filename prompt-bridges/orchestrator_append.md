@@ -14,3 +14,8 @@ Role contract:
 - Preserve the Superpowers order: brainstorm -> spec -> plan -> execution choice -> worktree -> per-task implementer -> spec review -> quality review -> final review -> finish branch.
 - Do not skip review loops to save time.
 - Treat non-Superpowers custom skills as normal tools; the controller decides when to use them.
+
+Best-of-N awareness:
+- When the user explicitly requests fan-out / best-of-N / parallel candidates / tournament selection, OR when you decide to use `dispatching-parallel-agents` for N implementations of the same task (not N independent tasks), invoke the `best-of-n-with-judge` skill.
+- Per-variant orchestrator hints (16 variants + 4 utility agents) are auto-injected from `oh-my-opencode-slim.jsonc` `orchestratorPrompt` fields. See those for specific dispatch guidance per agent.
+- Best-of-N is opt-in. Do not auto-trigger for routine bounded tasks where a single `@fixer` suffices.

@@ -64,3 +64,40 @@
 | `websearch` blocked in `fixer` | OMO MCP gating is working |
 | main session starts with `brainstorming` | Superpowers still owns workflow |
 | review goes to `oracle` by default | lane mapping is working |
+
+## Optional: Best-of-N + fast-lane verification
+
+Only run these checks if you installed the `opencode-config/` example setup (patch 0003 applied + agent/prompt/skill files copied + jsonc merged).
+
+### Variant agent availability
+
+- example probe: `dispatch task(subagent_type="fixer-alpha", prompt="reply with the single word pong, no tools")` — should succeed
+- repeat for: `fixer-beta`, `fixer-gamma`, `fixer-delta`, `oracle-alpha`, `oracle-beta`, `oracle-gamma`, `oracle-delta`, `designer-alpha`, `designer-beta`, `designer-gamma`, `designer-delta`, `explorer-alpha`, `explorer-beta`, `librarian-alpha`, `librarian-beta`
+- all 16 variants should respond
+
+### Fast-lane utility agent availability
+
+- `dispatch task(subagent_type="scout", prompt="find any file containing the string 'foo' in this directory, max 3 tool calls")` — should return `<file>:<line>` answer or `REQUIRES_DEEPER_AGENT`
+- `dispatch task(subagent_type="validator", prompt="is the string '{\"x\":1}' valid JSON?")` — should return `VALID`
+- `dispatch task(subagent_type="gist", prompt="summarize README.md in 3 lines")` — should return ≤3 lines
+- `dispatch task(subagent_type="wildcard", prompt="propose one naive approach to the problem of caching API responses")` — should return one labelled proposal
+
+### Suffix-resolution policy inheritance
+
+- `@fixer-alpha use verification-before-completion to check claims of done` — should ALLOW (inherits from `fixer`)
+- `@fixer-alpha use writing-plans to draft a plan` — should DENY (not in `fixer` allowed list)
+- `@oracle-beta use receiving-code-review to review a small patch` — should ALLOW (inherits from `oracle`)
+- `@oracle-delta use subagent-driven-development to delegate work` — should DENY
+- `@validator use verification-before-completion to verify a JSON parse` — should ALLOW (explicit policy entry)
+- `@scout use systematic-debugging to investigate a flaky test` — should DENY (empty allowed list)
+
+### Best-of-n-with-judge skill discoverability
+
+- `Load the best-of-n-with-judge skill and summarize its 9 phases without starting a fan-out` — should return Phase 0 through Phase 8 + ideation sub-mode summary
+
+### Best-of-N end-to-end smoke (optional but valuable)
+
+- Set up a tiny git project with a failing test
+- Trigger fan-out: `Run best-of-N on this task: <task spec>. Use 4 fixer variants and 4 oracle variants. max_redos=0.`
+- Expected: 4 candidates dispatched, hard gate filter, oracle reviews, winner cherry-picked, all `.worktrees/bestofn-*` cleaned, `.opencode/bestofn-state/` empty post-run
+- See `opencode-config/docs/plans/2026-05-04-best-of-n-with-judge-plan.md` Task 15 Step 4 for full post-condition checklist

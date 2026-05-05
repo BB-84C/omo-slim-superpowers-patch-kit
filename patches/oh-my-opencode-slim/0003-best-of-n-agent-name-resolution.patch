@@ -1,0 +1,118 @@
+diff --git a/src/cli/skills.ts b/src/cli/skills.ts
+index 58505ec..7e30fea 100644
+--- a/src/cli/skills.ts
++++ b/src/cli/skills.ts
+@@ -1,6 +1,9 @@
+ import { spawnSync } from 'node:child_process';
+ import { CUSTOM_SKILLS } from './custom-skills';
+-import { buildSuperpowersSkillPermissions } from './superpowers-policy';
++import {
++  buildSuperpowersSkillPermissions,
++  resolveBaseAgentName,
++} from './superpowers-policy';
+ 
+ /**
+  * A recommended skill to install via `npx skills add`.
+@@ -144,10 +147,16 @@ export function getSkillPermissionsForAgent(
+     ...superpowersPermissions,
+   };
+ 
++  // Resolve variant suffix names (e.g., "fixer-alpha" -> "fixer") so variants
++  // inherit base-agent allowedAgents matches without explicit per-variant
++  // entries in CUSTOM_SKILLS / RECOMMENDED_SKILLS / PERMISSION_ONLY_SKILLS.
++  const resolvedAgentName = resolveBaseAgentName(agentName);
++
+   for (const skill of RECOMMENDED_SKILLS) {
+     const isAllowed =
+       skill.allowedAgents.includes('*') ||
+-      skill.allowedAgents.includes(agentName);
++      skill.allowedAgents.includes(agentName) ||
++      skill.allowedAgents.includes(resolvedAgentName);
+     if (isAllowed) {
+       permissions[skill.skillName] = 'allow';
+     }
+@@ -157,7 +166,8 @@ export function getSkillPermissionsForAgent(
+   for (const skill of CUSTOM_SKILLS) {
+     const isAllowed =
+       skill.allowedAgents.includes('*') ||
+-      skill.allowedAgents.includes(agentName);
++      skill.allowedAgents.includes(agentName) ||
++      skill.allowedAgents.includes(resolvedAgentName);
+     if (isAllowed) {
+       permissions[skill.name] = 'allow';
+     }
+@@ -167,7 +177,8 @@ export function getSkillPermissionsForAgent(
+   for (const skill of PERMISSION_ONLY_SKILLS) {
+     const isAllowed =
+       skill.allowedAgents.includes('*') ||
+-      skill.allowedAgents.includes(agentName);
++      skill.allowedAgents.includes(agentName) ||
++      skill.allowedAgents.includes(resolvedAgentName);
+     if (isAllowed) {
+       permissions[skill.name] = 'allow';
+     }
+diff --git a/src/cli/superpowers-policy.ts b/src/cli/superpowers-policy.ts
+index 9ef8e30..edb8a77 100644
+--- a/src/cli/superpowers-policy.ts
++++ b/src/cli/superpowers-policy.ts
+@@ -43,8 +43,42 @@ const AGENT_ALLOWED_SUPERPOWERS: Record<string, string[]> = {
+   observer: [],
+   council: [],
+   councillor: [],
++  // Best-of-N utility agents (custom; fall-through default = empty allowed)
++  scout: [],
++  validator: ['verification-before-completion'],
++  gist: [],
++  wildcard: [],
+ };
+ 
++/**
++ * Resolve a possibly-suffixed agent name to its base name for policy lookup.
++ * Variant agents like "fixer-alpha", "oracle-gamma", "designer-delta" map to
++ * their base "fixer", "oracle", "designer" respectively, so they inherit the
++ * base agent's superpowers permission policy without needing to be listed
++ * explicitly in AGENT_ALLOWED_SUPERPOWERS.
++ *
++ * Names that are already in the policy map are returned as-is (no stripping).
++ * Names whose base prefix is not in the map are returned unchanged (will
++ * fall through to empty-allowed default).
++ *
++ * Examples:
++ *   "fixer-alpha"  -> "fixer"     (suffix-stripped)
++ *   "fixer"        -> "fixer"     (already in map)
++ *   "validator"    -> "validator" (already in map, no strip)
++ *   "scout"        -> "scout"     (already in map)
++ *   "unknown-foo"  -> "unknown-foo" (no match; empty allowed by default)
++ */
++export function resolveBaseAgentName(agentName: string): string {
++  if (agentName in AGENT_ALLOWED_SUPERPOWERS) {
++    return agentName;
++  }
++  const baseName = agentName.split('-')[0];
++  if (baseName in AGENT_ALLOWED_SUPERPOWERS) {
++    return baseName;
++  }
++  return agentName;
++}
++
+ let cachedSuperpowersSkills: string[] | null = null;
+ 
+ function getOpencodeConfigDir(): string {
+@@ -90,11 +124,15 @@ export function getAllowedSuperpowersSkillsForAgent(
+   agentName: string,
+   superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
+ ): Set<string> {
+-  if (agentName === 'orchestrator') {
++  // Resolve variant suffix names (e.g., "fixer-alpha" -> "fixer") so they
++  // inherit the base agent's policy without per-variant entries.
++  const resolvedName = resolveBaseAgentName(agentName);
++
++  if (resolvedName === 'orchestrator') {
+     return new Set(superpowersSkills.filter((name) => name !== 'using-superpowers'));
+   }
+ 
+-  const explicit = new Set(AGENT_ALLOWED_SUPERPOWERS[agentName] ?? []);
++  const explicit = new Set(AGENT_ALLOWED_SUPERPOWERS[resolvedName] ?? []);
+   const allowed = new Set<string>();
+ 
+   for (const skill of superpowersSkills) {
