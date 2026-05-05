@@ -123,3 +123,37 @@ Run the same probe with both `@orchestrator` and `@orchestrator-beta` (assuming 
 
 - An agent whose name does NOT start with `orchestrator` (e.g. your `laborer`) should NOT get mode='primary' — confirm via the agent picker that `laborer` only appears as a subagent
 - A new agent named `my-orchestrator` (mid-name `orchestrator`) should NOT match — patch 0004 uses prefix matching only
+
+## Optional: Anthropic cooldown verification (requires patch 0005)
+
+Only run these checks if you applied patch 0005 and configured a model fallback array on at least one agent.
+
+### Static checks
+
+- After at least one observed rate-limit event, file `~/.config/opencode/.omo-slim-cooldowns.json` exists
+- File content: JSON object mapping `provider/model` → epoch ms (number)
+- Hidden filename (leading dot) keeps the config dir listing clean
+
+### Behavior probes (require an actually-rate-limited model)
+
+The cleanest way to test live behavior is to wait until your real Anthropic quota is exhausted, then:
+
+1. Send a prompt to `@orchestrator` (configured with `model: [opus, gpt-5.4]`)
+2. Observe: ~30s retry wait → response arrives via gpt-5.4 (foreground fallback fired)
+3. Check `~/.config/opencode/.omo-slim-cooldowns.json` — should contain an `anthropic/claude-opus-4-7` entry
+4. Restart OpenCode
+5. Send another prompt to `@orchestrator`
+6. Observe: response arrives IMMEDIATELY on gpt-5.4 (no retry storm — startup-time cooldown skip worked)
+7. Wait until the recorded epoch elapses (or manually edit the file to remove the entry)
+8. Send another prompt — should now resume on Opus
+
+### Synthetic check via test suite
+
+If you don't want to wait for real rate limits, the unit + integration tests already exercise the full flow:
+
+```bash
+cd /path/to/oh-my-opencode-slim
+bun test src/hooks/foreground-fallback/
+```
+
+Expected: 48+ tests pass / 0 fail (17 cooldown unit tests + 26 fallback baseline + 5 cooldown integration tests).

@@ -420,17 +420,29 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
       }
 
       if (Object.keys(effectiveArrays).length > 0) {
+        // Pull the persistent cooldown store from the foreground fallback
+        // manager so startup-time model selection skips models whose
+        // Anthropic-style 5-hour rolling quota is still exhausted from a
+        // previous session. Without this, every fresh OpenCode start would
+        // burn ~30s of OpenCode-native exponential-backoff retries against
+        // a known-rate-limited model before ForegroundFallbackManager can
+        // catch the eventual error and switch to the next model.
+        const cooldowns = foregroundFallback.getCooldownStore();
         for (const [agentName, modelArray] of Object.entries(effectiveArrays)) {
           if (modelArray.length === 0) continue;
 
-          // Use the first model in the effective array. Not all providers
-          // require entries in opencodeConfig.provider — some are loaded
-          // automatically by opencode (e.g. github-copilot, openrouter).
-          // We cannot distinguish these from truly unconfigured providers
-          // at config-hook time, so we cannot gate on the provider config
-          // keys. Runtime failover is handled separately by
-          // ForegroundFallbackManager.
-          const chosen = modelArray[0];
+          // Prefer the first model that isn't currently in cooldown. If
+          // every model in the chain is cooled down, fall back to
+          // modelArray[0] so the user isn't fully stuck (the runtime
+          // ForegroundFallbackManager will still walk the chain on
+          // failure). Not all providers require entries in
+          // opencodeConfig.provider — some are loaded automatically by
+          // opencode (e.g. github-copilot, openrouter) — so we cannot gate
+          // on provider config keys here.
+          const available = modelArray.find(
+            (m) => !cooldowns.isCoolingDown(m.id),
+          );
+          const chosen = available ?? modelArray[0];
           const entry = configAgent[agentName] as
             | Record<string, unknown>
             | undefined;

@@ -30,7 +30,7 @@ Nearby newer versions will likely still work, but if patch application fails or 
 
 ## What this kit patches
 
-This patch kit changes OMO Slim in four ways:
+This patch kit changes OMO Slim in five ways:
 
 1. **Superpowers-only skill gating** (patch 0001)
    - OMO Slim only selectively restricts `superpowers` skills
@@ -54,6 +54,14 @@ This patch kit changes OMO Slim in four ways:
    - Lets you define fallback primary orchestrators (different model, same behavior) so the OpenCode agent picker shows multiple switchable orchestrators
    - Common use case: avoid 5-hour rate-limit downtime by switching to `orchestrator-beta` (running on a vendor-diverse model) when your main orchestrator's quota is exhausted
    - Recommended for all installations; skip only if you intentionally need orchestrator-shaped names to NOT be treated as orchestrators
+
+5. **Anthropic-aware cooldown tracking** (patch 0005, v1.3.0)
+   - Parses Anthropic's `anthropic-ratelimit-*-reset` response headers when a rate-limit error fires
+   - Persists per-model cooldown state to disk at `~/.config/opencode/.omo-slim-cooldowns.json`
+   - Skips cooled-down models in BOTH the runtime fallback chain (mid-session) AND the startup-time model selection (fresh sessions)
+   - Eliminates the ~30s of OpenCode-native exponential-backoff retries that would otherwise burn against a known-rate-limited model on the first message of each new session
+   - Pairs with patch 0003's model-array fallback (`agents.<name>.model: [primary, backup]`) to make Anthropic 5-hour rolling quotas effectively transparent to the user
+   - The cooldown store is provider/model-id-agnostic — future Anthropic models automatically get the same header parsing without code changes
 
 It also includes prompt bridge files so OMO Slim agents understand how to behave inside a Superpowers-managed workflow.
 
@@ -82,7 +90,7 @@ This is opt-in. The base patch kit (patches 0001 + 0002 + bridges + base agent t
 
 ## Repository layout
 
-- `patches/` — patch files to apply against an upstream local OMO Slim checkout (4 patches: skill gating, MCP gating, best-of-N name resolution, orchestrator prefix matching)
+- `patches/` — patch files to apply against an upstream local OMO Slim checkout (5 patches: skill gating, MCP gating, best-of-N name resolution, orchestrator prefix matching, Anthropic cooldown tracking)
 - `snapshots/` — validated modified source files for manual comparison
 - `config-templates/` — template configs based on the maintainer profile
 - `prompt-bridges/` — per-agent append prompts for Superpowers-aware behavior
@@ -116,6 +124,12 @@ If you installed the optional `opencode-config/` setup, also verify:
 If you applied patch 0004 and added an `orchestrator-beta` (or other orchestrator-prefix variant) entry to your OMO Slim config, also verify:
 - The variant orchestrator is visible in the OpenCode agent picker as a primary mode
 - Switching to it preserves all bridge prompts, MCPs, and superpowers skill access (only the underlying model changes)
+
+If you applied patch 0005 and configured a model fallback array on any agent (e.g. `"orchestrator": { "model": [opus, gpt-5.4] }`), also verify:
+- The cooldown file is created at `~/.config/opencode/.omo-slim-cooldowns.json` after the first observed rate-limit event
+- After a rate-limit event mid-session, subsequent prompts in the SAME session use the fallback model directly with no wait
+- After restarting OpenCode while a cooldown is still active, the next session starts on the fallback model directly (no 30-second retry storm against the rate-limited primary)
+- After the recorded reset time elapses, future sessions resume on the primary model normally
 
 ## Rollback
 

@@ -62,13 +62,19 @@ That snippet intentionally disables the default OpenCode `general` and `explore`
    git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0004-orchestrator-prefix-matching.patch
    ```
 
+   Recommended — apply patch 0005 to enable Anthropic-aware cooldown tracking (eliminates the ~30s retry storm against rate-limited models on fresh sessions when using model-array fallback chains):
+
+   ```bash
+   git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0005-anthropic-cooldown-tracking.patch
+   ```
+
    Optional — apply patch 0003 ONLY if you intend to install the best-of-N + fast-lane example setup from `opencode-config/`:
 
    ```bash
    git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0003-best-of-n-agent-name-resolution.patch
    ```
 
-   Note: if applying both 0003 and 0004, apply 0003 first, then 0004 (the order they ship in this repo).
+   Note: apply patches in numeric order (0001 → 0002 → 0003 → 0004 → 0005). Each later patch may depend on earlier ones being in place.
 
 3. If patch hunks fail, compare the affected files against `snapshots/` and port the changes manually.
 
@@ -142,6 +148,33 @@ Add to your `oh-my-opencode-slim.jsonc` under `presets.superpowers-bridge`:
 After restart, `orchestrator-beta` appears in the OpenCode agent picker as a primary agent. Switching to it preserves the bridge prompt, MCPs, permissions, and superpowers skill access — only the underlying model differs.
 
 Any agent name starting with `orchestrator` works (e.g. `orchestrator-fallback`, `orchestrator2`). Skip this section if you do not want fallback orchestrators.
+
+## Optional: configure auto-failover with model arrays (requires patch 0005 for best UX)
+
+Even better than manual `orchestrator-beta` switching is configuring the main `orchestrator` agent with a priority-ordered model array. With patch 0005, OMO Slim's `ForegroundFallbackManager` automatically:
+
+1. Detects rate-limit / quota / overload errors mid-session
+2. Parses the `anthropic-ratelimit-*-reset` headers (Anthropic) and persists the cooldown across sessions
+3. Replays the last user message on the next available model in the chain
+4. On fresh sessions during the cooldown window, starts directly on the fallback model (no wasted retry storm)
+
+Example — replace your `orchestrator` entry's single-string `model` with an array:
+
+```jsonc
+"orchestrator": {
+  "model": [
+    { "id": "anthropic/claude-opus-4-7",  "variant": "high"  },
+    { "id": "openai/gpt-5.4",             "variant": "xhigh" }
+  ],
+  "mcps": ["*", "!context7"]
+}
+```
+
+After restart, the auto-failover is fully automatic. Your only visible change is occasional model-mismatch in the response style when Opus is rate-limited.
+
+**Future model swaps**: edit the array in `~/.config/opencode/oh-my-opencode-slim.jsonc`, save, restart OpenCode. No rebuild, no patch regeneration. The cooldown machinery is provider-agnostic.
+
+The cooldown state file lives at `~/.config/opencode/.omo-slim-cooldowns.json`. It's safe to delete if you want to force-clear all known cooldowns; it'll be regenerated on the next rate-limit event.
 
 ## If your version differs
 

@@ -1,0 +1,799 @@
+diff --git a/src/hooks/foreground-fallback/cooldowns.test.ts b/src/hooks/foreground-fallback/cooldowns.test.ts
+new file mode 100644
+index 0000000..5ff968c
+--- /dev/null
++++ b/src/hooks/foreground-fallback/cooldowns.test.ts
+@@ -0,0 +1,177 @@
++import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
++import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { createCooldownStore, parseAnthropicCooldown } from './cooldowns';
++
++// ---------------------------------------------------------------------------
++// parseAnthropicCooldown
++// ---------------------------------------------------------------------------
++
++describe('parseAnthropicCooldown', () => {
++  test('returns null when headers is undefined', () => {
++    expect(parseAnthropicCooldown(undefined)).toBeNull();
++  });
++
++  test('returns null when no recognizable reset header is present', () => {
++    expect(parseAnthropicCooldown({ 'x-rate-limit-reset': '2026-05-05T15:00:00Z' })).toBeNull();
++    expect(parseAnthropicCooldown({})).toBeNull();
++  });
++
++  test('parses anthropic-ratelimit-requests-reset', () => {
++    const ts = parseAnthropicCooldown({
++      'anthropic-ratelimit-requests-reset': '2026-05-05T15:00:00Z',
++    });
++    expect(ts).toBe(Date.parse('2026-05-05T15:00:00Z'));
++  });
++
++  test('takes the maximum across all 4 reset headers', () => {
++    const ts = parseAnthropicCooldown({
++      'anthropic-ratelimit-requests-reset': '2026-05-05T15:00:00Z',
++      'anthropic-ratelimit-tokens-reset': '2026-05-05T15:30:00Z',
++      'anthropic-ratelimit-input-tokens-reset': '2026-05-05T14:00:00Z',
++      'anthropic-ratelimit-output-tokens-reset': '2026-05-05T15:15:00Z',
++    });
++    expect(ts).toBe(Date.parse('2026-05-05T15:30:00Z'));
++  });
++
++  test('header lookup is case-insensitive', () => {
++    const ts = parseAnthropicCooldown({
++      'Anthropic-RateLimit-Requests-Reset': '2026-05-05T15:00:00Z',
++    });
++    expect(ts).toBe(Date.parse('2026-05-05T15:00:00Z'));
++  });
++
++  test('skips malformed values without throwing', () => {
++    const ts = parseAnthropicCooldown({
++      'anthropic-ratelimit-requests-reset': 'not-a-date',
++      'anthropic-ratelimit-tokens-reset': '2026-05-05T15:00:00Z',
++    });
++    expect(ts).toBe(Date.parse('2026-05-05T15:00:00Z'));
++  });
++
++  test('returns null when all values are malformed', () => {
++    const ts = parseAnthropicCooldown({
++      'anthropic-ratelimit-requests-reset': 'not-a-date',
++      'anthropic-ratelimit-tokens-reset': '',
++    });
++    expect(ts).toBeNull();
++  });
++});
++
++// ---------------------------------------------------------------------------
++// createCooldownStore
++// ---------------------------------------------------------------------------
++
++describe('createCooldownStore', () => {
++  let tmp: string;
++  let storePath: string;
++  let now: number;
++  const advanceClock = (ms: number): void => {
++    now += ms;
++  };
++
++  beforeEach(() => {
++    tmp = mkdtempSync(join(tmpdir(), 'omo-cooldowns-'));
++    storePath = join(tmp, '.omo-slim-cooldowns.json');
++    now = Date.parse('2026-05-05T12:00:00Z');
++  });
++
++  afterEach(() => {
++    rmSync(tmp, { recursive: true, force: true });
++  });
++
++  test('starts empty when file does not exist', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    expect(store.snapshot()).toEqual({});
++    expect(store.isCoolingDown('any/model')).toBe(false);
++  });
++
++  test('set persists immediately', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const future = now + 60_000;
++    store.set('anthropic/claude-opus-4-7', future);
++    expect(existsSync(storePath)).toBe(true);
++    const persisted = JSON.parse(readFileSync(storePath, 'utf8'));
++    expect(persisted['anthropic/claude-opus-4-7']).toBe(future);
++  });
++
++  test('isCoolingDown returns true while cooldown is active', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    store.set('anthropic/claude-opus-4-7', now + 60_000);
++    expect(store.isCoolingDown('anthropic/claude-opus-4-7')).toBe(true);
++  });
++
++  test('isCoolingDown returns false after expiry and clears the entry', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    store.set('anthropic/claude-opus-4-7', now + 60_000);
++    advanceClock(120_000);
++    expect(store.isCoolingDown('anthropic/claude-opus-4-7')).toBe(false);
++    expect(store.snapshot()['anthropic/claude-opus-4-7']).toBeUndefined();
++  });
++
++  test('set ignores reset times in the past', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    store.set('anthropic/claude-opus-4-7', now - 1);
++    expect(store.snapshot()).toEqual({});
++  });
++
++  test('set keeps the latest cooldown when called twice', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    store.set('anthropic/claude-opus-4-7', now + 30_000);
++    store.set('anthropic/claude-opus-4-7', now + 90_000);
++    expect(store.snapshot()['anthropic/claude-opus-4-7']).toBe(now + 90_000);
++    // A subsequent earlier value does NOT overwrite a later one.
++    store.set('anthropic/claude-opus-4-7', now + 60_000);
++    expect(store.snapshot()['anthropic/claude-opus-4-7']).toBe(now + 90_000);
++  });
++
++  test('reload from disk drops expired entries', () => {
++    const s1 = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    s1.set('anthropic/claude-opus-4-7', now + 60_000);
++    s1.set('openai/gpt-5.4', now + 600_000);
++
++    advanceClock(120_000);
++    const s2 = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    expect(s2.isCoolingDown('anthropic/claude-opus-4-7')).toBe(false);
++    expect(s2.isCoolingDown('openai/gpt-5.4')).toBe(true);
++    expect(Object.keys(s2.snapshot())).toEqual(['openai/gpt-5.4']);
++  });
++
++  test('purgeExpired removes elapsed entries and persists', () => {
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const m1Reset = now + 30_000;
++    const m2Reset = now + 600_000;
++    store.set('a/m1', m1Reset);
++    store.set('b/m2', m2Reset);
++    advanceClock(60_000);
++    store.purgeExpired();
++    expect(store.snapshot()).toEqual({ 'b/m2': m2Reset });
++    // Re-load from disk to confirm persistence
++    const reloaded = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    expect(Object.keys(reloaded.snapshot())).toEqual(['b/m2']);
++  });
++
++  test('handles corrupt JSON file gracefully', () => {
++    writeFileSync(storePath, '{not valid json', 'utf8');
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    expect(store.snapshot()).toEqual({});
++    // Subsequent set() works normally
++    store.set('a/m', now + 60_000);
++    expect(store.isCoolingDown('a/m')).toBe(true);
++  });
++
++  test('ignores non-string keys and non-number values from disk', () => {
++    writeFileSync(
++      storePath,
++      JSON.stringify({
++        'good/model': now + 60_000,
++        'bad-1/model': 'not-a-number',
++        '': 12345,
++      }),
++      'utf8',
++    );
++    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    expect(Object.keys(store.snapshot())).toEqual(['good/model']);
++  });
++});
+diff --git a/src/hooks/foreground-fallback/cooldowns.ts b/src/hooks/foreground-fallback/cooldowns.ts
+new file mode 100644
+index 0000000..e349cd5
+--- /dev/null
++++ b/src/hooks/foreground-fallback/cooldowns.ts
+@@ -0,0 +1,219 @@
++/**
++ * Persistent cross-session cooldown tracker for rate-limited models.
++ *
++ * Anthropic (and some other providers) returns specific reset-time headers
++ * on rate-limit responses, e.g.:
++ *   anthropic-ratelimit-requests-reset:       2026-05-05T15:00:00Z
++ *   anthropic-ratelimit-tokens-reset:         2026-05-05T15:00:00Z
++ *   anthropic-ratelimit-input-tokens-reset:   2026-05-05T15:00:00Z
++ *
++ * Without parsing these, omo-slim's ForegroundFallbackManager wastes the
++ * first attempt of every new session re-trying a model whose 5-hour rolling
++ * quota is still exhausted. This module:
++ *
++ *   1. Parses the headers (parseAnthropicCooldown)
++ *   2. Persists a Map<provider/model, resetEpochMs> to disk
++ *   3. Lets ForegroundFallbackManager skip cooled-down models at chain
++ *      selection time (isCoolingDown) so the FIRST attempt of every new
++ *      session hits a working model directly.
++ *
++ * Persistence file lives at: <getConfigDir()>/.omo-slim-cooldowns.json
++ * Atomic writes use the same temp+rename pattern used by config-io.ts.
++ *
++ * The store is provider-agnostic — a non-Anthropic provider that emits an
++ * x-ratelimit-reset (or similar) header could be added by extending
++ * parseAnthropicCooldown; the cooldown machinery itself stores plain
++ * (modelKey, resetEpochMs) pairs.
++ */
++
++import {
++  copyFileSync,
++  existsSync,
++  mkdirSync,
++  readFileSync,
++  renameSync,
++  writeFileSync,
++} from 'node:fs';
++import { dirname, join } from 'node:path';
++import { getConfigDir } from '../../cli/paths';
++import { log } from '../../utils/logger';
++
++// ---------------------------------------------------------------------------
++// Header parsing
++// ---------------------------------------------------------------------------
++
++const ANTHROPIC_RESET_HEADERS = [
++  'anthropic-ratelimit-requests-reset',
++  'anthropic-ratelimit-tokens-reset',
++  'anthropic-ratelimit-input-tokens-reset',
++  'anthropic-ratelimit-output-tokens-reset',
++] as const;
++
++/**
++ * Extract the latest cooldown-until epoch (ms) from an Anthropic response
++ * headers object. Returns null if no recognizable reset header is present
++ * or all headers fail to parse.
++ *
++ * Header values are ISO-8601 timestamps per Anthropic's docs. We accept
++ * any input Date.parse() understands (covers RFC 2822, IETF, etc.) so we
++ * stay robust to provider format drift.
++ */
++export function parseAnthropicCooldown(
++  headers: Record<string, string> | undefined,
++): number | null {
++  if (!headers) return null;
++
++  // Headers may arrive in any case; build a case-insensitive lookup.
++  const lc: Record<string, string> = {};
++  for (const [k, v] of Object.entries(headers)) {
++    lc[k.toLowerCase()] = v;
++  }
++
++  let max: number | null = null;
++  for (const name of ANTHROPIC_RESET_HEADERS) {
++    const raw = lc[name];
++    if (typeof raw !== 'string' || raw.length === 0) continue;
++    const t = Date.parse(raw);
++    if (!Number.isFinite(t)) continue;
++    if (max === null || t > max) max = t;
++  }
++  return max;
++}
++
++// ---------------------------------------------------------------------------
++// Persistent store
++// ---------------------------------------------------------------------------
++
++export interface CooldownStore {
++  /** Mark a model as cooling down until the given epoch ms. */
++  set(modelKey: string, resetEpochMs: number): void;
++  /** Return true if the model is still cooling down at `now`. */
++  isCoolingDown(modelKey: string, now?: number): boolean;
++  /** Remove all entries whose cooldown has elapsed. */
++  purgeExpired(now?: number): void;
++  /** Persist the current map to disk atomically. */
++  save(): void;
++  /** Snapshot of current entries (for tests/observability). */
++  snapshot(): Record<string, number>;
++}
++
++interface CreateOptions {
++  /** Override file path (default: <getConfigDir()>/.omo-slim-cooldowns.json). */
++  filePath?: string;
++  /** Override clock (default: Date.now). Used in tests. */
++  nowFn?: () => number;
++}
++
++/**
++ * Default cooldown file path. Hidden filename (leading dot) so it doesn't
++ * clutter the user's config dir listing.
++ */
++export function getDefaultCooldownPath(): string {
++  return join(getConfigDir(), '.omo-slim-cooldowns.json');
++}
++
++/**
++ * Construct an in-memory cooldown store backed by a JSON file. The store
++ * loads existing entries (and purges expired ones) at construction time.
++ *
++ * Calls to `set()` immediately persist (so a crash mid-fallback doesn't
++ * lose cooldown state); `save()` is exposed for tests and explicit flushes.
++ */
++export function createCooldownStore(opts: CreateOptions = {}): CooldownStore {
++  const filePath = opts.filePath ?? getDefaultCooldownPath();
++  const nowFn = opts.nowFn ?? (() => Date.now());
++  const map = new Map<string, number>();
++
++  // Initial load + purge of expired entries.
++  if (existsSync(filePath)) {
++    try {
++      const raw = readFileSync(filePath, 'utf8');
++      const parsed = JSON.parse(raw) as Record<string, unknown>;
++      const now = nowFn();
++      for (const [k, v] of Object.entries(parsed)) {
++        if (typeof k !== 'string' || k.length === 0) continue;
++        if (typeof v !== 'number' || !Number.isFinite(v)) continue;
++        if (v > now) map.set(k, v);
++      }
++    } catch (err) {
++      // Corrupt file is non-fatal; log and start fresh.
++      log('[foreground-fallback/cooldowns] failed to load store', {
++        filePath,
++        error: err instanceof Error ? err.message : String(err),
++      });
++    }
++  }
++
++  function save(): void {
++    try {
++      const dir = dirname(filePath);
++      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
++
++      const obj: Record<string, number> = {};
++      for (const [k, v] of map.entries()) obj[k] = v;
++      const content = `${JSON.stringify(obj, null, 2)}\n`;
++
++      const tmp = `${filePath}.tmp`;
++      const bak = `${filePath}.bak`;
++      if (existsSync(filePath)) {
++        try {
++          copyFileSync(filePath, bak);
++        } catch {
++          // Backup failure is non-fatal; main write still proceeds.
++        }
++      }
++      writeFileSync(tmp, content);
++      renameSync(tmp, filePath);
++    } catch (err) {
++      log('[foreground-fallback/cooldowns] failed to persist store', {
++        filePath,
++        error: err instanceof Error ? err.message : String(err),
++      });
++    }
++  }
++
++  return {
++    set(modelKey, resetEpochMs) {
++      if (!modelKey || !Number.isFinite(resetEpochMs)) return;
++      // Only record forward-looking cooldowns; ignore stale resets.
++      if (resetEpochMs <= nowFn()) return;
++      // Keep the LATEST reset time if we already have one.
++      const existing = map.get(modelKey);
++      if (existing !== undefined && existing >= resetEpochMs) return;
++      map.set(modelKey, resetEpochMs);
++      save();
++    },
++
++    isCoolingDown(modelKey, now) {
++      const reset = map.get(modelKey);
++      if (reset === undefined) return false;
++      const t = now ?? nowFn();
++      if (reset <= t) {
++        map.delete(modelKey);
++        save();
++        return false;
++      }
++      return true;
++    },
++
++    purgeExpired(now) {
++      const t = now ?? nowFn();
++      let changed = false;
++      for (const [k, v] of map.entries()) {
++        if (v <= t) {
++          map.delete(k);
++          changed = true;
++        }
++      }
++      if (changed) save();
++    },
++
++    save,
++
++    snapshot() {
++      const out: Record<string, number> = {};
++      for (const [k, v] of map.entries()) out[k] = v;
++      return out;
++    },
++  };
++}
+diff --git a/src/hooks/foreground-fallback/index.test.ts b/src/hooks/foreground-fallback/index.test.ts
+index 83bbbd4..73b74a2 100644
+--- a/src/hooks/foreground-fallback/index.test.ts
++++ b/src/hooks/foreground-fallback/index.test.ts
+@@ -1,4 +1,8 @@
+ import { beforeEach, describe, expect, mock, test } from 'bun:test';
++import { mkdtempSync, rmSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
++import { createCooldownStore } from './cooldowns';
+ import { ForegroundFallbackManager, isRateLimitError } from './index';
+ 
+ // ---------------------------------------------------------------------------
+@@ -622,3 +626,204 @@ describe('ForegroundFallbackManager resolveChain cross-agent isolation', () => {
+     expect(call[0].body.model.modelID).toBe('gpt-4o');
+   });
+ });
++
++// ---------------------------------------------------------------------------
++// Anthropic cooldown integration (v1.3.0 patch 0005)
++// ---------------------------------------------------------------------------
++
++describe('ForegroundFallbackManager Anthropic cooldown integration', () => {
++  let tmp: string;
++  let cooldownPath: string;
++  let now: number;
++
++  beforeEach(() => {
++    tmp = mkdtempSync(join(tmpdir(), 'omo-fb-cooldown-'));
++    cooldownPath = join(tmp, '.omo-slim-cooldowns.json');
++    now = Date.parse('2026-05-05T12:00:00Z');
++  });
++
++  function makeManagerWithStore(
++    chains: Record<string, string[]> = {
++      orchestrator: ['anthropic/claude-opus-4-7', 'openai/gpt-5.4'],
++    },
++  ) {
++    const store = createCooldownStore({
++      filePath: cooldownPath,
++      nowFn: () => now,
++    });
++    const { client, mocks } = createMockClient();
++    const mgr = new ForegroundFallbackManager(client, chains, true, store);
++    return { mgr, mocks, store, cleanup: () => rmSync(tmp, { recursive: true, force: true }) };
++  }
++
++  test('captures cooldown from anthropic-ratelimit-*-reset headers on session.error', async () => {
++    const { mgr, store, cleanup } = makeManagerWithStore();
++    try {
++      // Seed model identity for the session
++      await mgr.handleEvent({
++        type: 'message.updated',
++        properties: {
++          info: {
++            sessionID: 'sess-1',
++            agent: 'orchestrator',
++            providerID: 'anthropic',
++            modelID: 'claude-opus-4-7',
++          },
++        },
++      });
++
++      const resetEpochMs = now + 5 * 60 * 60 * 1000; // 5 hours
++      await mgr.handleEvent({
++        type: 'session.error',
++        properties: {
++          sessionID: 'sess-1',
++          error: {
++            message: 'rate limit exceeded',
++            data: {
++              statusCode: 429,
++              responseHeaders: {
++                'anthropic-ratelimit-requests-reset': new Date(resetEpochMs).toISOString(),
++              },
++            },
++          },
++        },
++      });
++
++      expect(store.snapshot()['anthropic/claude-opus-4-7']).toBe(resetEpochMs);
++    } finally {
++      cleanup();
++    }
++  });
++
++  test('skips cooled-down models when picking next fallback', async () => {
++    const { mgr, mocks, store, cleanup } = makeManagerWithStore({
++      orchestrator: [
++        'anthropic/claude-opus-4-7',
++        'openai/gpt-5.4',
++        'google/gemini-2.5-pro',
++      ],
++    });
++    try {
++      // Pre-populate cooldown for opus and gpt-5.4
++      store.set('anthropic/claude-opus-4-7', now + 60_000);
++      store.set('openai/gpt-5.4', now + 60_000);
++
++      // Seed agent for the session
++      await mgr.handleEvent({
++        type: 'message.updated',
++        properties: {
++          info: {
++            sessionID: 'sess-skip',
++            agent: 'orchestrator',
++            providerID: 'anthropic',
++            modelID: 'claude-opus-4-7',
++          },
++        },
++      });
++
++      // Trigger fallback (no headers, just a generic rate-limit error)
++      await mgr.handleEvent({
++        type: 'session.error',
++        properties: {
++          sessionID: 'sess-skip',
++          error: { message: 'rate limit exceeded' },
++        },
++      });
++
++      // Should have picked gemini-2.5-pro (skipping opus and gpt-5.4 due to cooldown)
++      expect(mocks.promptAsync).toHaveBeenCalledTimes(1);
++      const call = mocks.promptAsync.mock.calls[0] as [
++        { body: { model: { providerID: string; modelID: string } } },
++      ];
++      expect(call[0].body.model.providerID).toBe('google');
++      expect(call[0].body.model.modelID).toBe('gemini-2.5-pro');
++    } finally {
++      cleanup();
++    }
++  });
++
++  test('falls back to first untried when all models are cooling down', async () => {
++    const { mgr, mocks, store, cleanup } = makeManagerWithStore({
++      orchestrator: ['anthropic/claude-opus-4-7', 'openai/gpt-5.4'],
++    });
++    try {
++      // Cool down BOTH models in chain
++      store.set('anthropic/claude-opus-4-7', now + 60_000);
++      store.set('openai/gpt-5.4', now + 60_000);
++
++      await mgr.handleEvent({
++        type: 'message.updated',
++        properties: {
++          info: {
++            sessionID: 'sess-all-cool',
++            agent: 'orchestrator',
++            providerID: 'anthropic',
++            modelID: 'claude-opus-4-7',
++          },
++        },
++      });
++
++      await mgr.handleEvent({
++        type: 'session.error',
++        properties: {
++          sessionID: 'sess-all-cool',
++          error: { message: 'rate limit exceeded' },
++        },
++      });
++
++      // Cooldown is a soft hint: when entire chain is cooling, we still
++      // pick the first untried (cooldown ignored). Better to attempt and
++      // fail than leave the user fully stuck.
++      expect(mocks.promptAsync).toHaveBeenCalledTimes(1);
++      const call = mocks.promptAsync.mock.calls[0] as [
++        { body: { model: { providerID: string; modelID: string } } },
++      ];
++      expect(call[0].body.model.providerID).toBe('openai');
++      expect(call[0].body.model.modelID).toBe('gpt-5.4');
++    } finally {
++      cleanup();
++    }
++  });
++
++  test('non-anthropic errors do not write to cooldown store', async () => {
++    const { mgr, store, cleanup } = makeManagerWithStore();
++    try {
++      await mgr.handleEvent({
++        type: 'message.updated',
++        properties: {
++          info: {
++            sessionID: 'sess-noheader',
++            agent: 'orchestrator',
++            providerID: 'anthropic',
++            modelID: 'claude-opus-4-7',
++          },
++        },
++      });
++
++      await mgr.handleEvent({
++        type: 'session.error',
++        properties: {
++          sessionID: 'sess-noheader',
++          error: {
++            message: 'rate limit exceeded',
++            data: { statusCode: 429 }, // no responseHeaders
++          },
++        },
++      });
++
++      // No cooldown captured because no headers
++      expect(store.snapshot()['anthropic/claude-opus-4-7']).toBeUndefined();
++    } finally {
++      cleanup();
++    }
++  });
++
++  test('getCooldownStore exposes the underlying store', () => {
++    const { mgr, store, cleanup } = makeManagerWithStore();
++    try {
++      expect(mgr.getCooldownStore()).toBe(store);
++    } finally {
++      cleanup();
++    }
++  });
++});
+diff --git a/src/hooks/foreground-fallback/index.ts b/src/hooks/foreground-fallback/index.ts
+index 6cb05c0..f9e0577 100644
+--- a/src/hooks/foreground-fallback/index.ts
++++ b/src/hooks/foreground-fallback/index.ts
+@@ -16,6 +16,11 @@
+ 
+ import type { PluginInput } from '@opencode-ai/plugin';
+ import { log } from '../../utils/logger';
++import {
++  type CooldownStore,
++  createCooldownStore,
++  parseAnthropicCooldown,
++} from './cooldowns';
+ 
+ type OpencodeClient = PluginInput['client'];
+ 
+@@ -52,6 +57,21 @@ export function isRateLimitError(error: unknown): boolean {
+   return RATE_LIMIT_PATTERNS.some((p) => p.test(text));
+ }
+ 
++/**
++ * Extract response headers from a rate-limit-shaped error event payload.
++ * Lives at error.data.responseHeaders per @opencode-ai/sdk's ApiError type
++ * (types.gen.d.ts: data.responseHeaders?: Record<string, string>).
++ */
++function extractResponseHeaders(
++  error: unknown,
++): Record<string, string> | undefined {
++  if (!error || typeof error !== 'object') return undefined;
++  const data = (error as { data?: { responseHeaders?: unknown } }).data;
++  const headers = data?.responseHeaders;
++  if (!headers || typeof headers !== 'object') return undefined;
++  return headers as Record<string, string>;
++}
++
+ // ---------------------------------------------------------------------------
+ // Helpers
+ // ---------------------------------------------------------------------------
+@@ -89,6 +109,17 @@ export class ForegroundFallbackManager {
+   /** sessionID → timestamp of last trigger (for deduplication) */
+   private readonly lastTrigger = new Map<string, number>();
+ 
++  /**
++   * Persistent cross-session cooldown tracker. When an Anthropic rate-limit
++   * response arrives with anthropic-ratelimit-*-reset headers, the affected
++   * model is recorded here so subsequent chain traversals (in this session
++   * AND in fresh sessions across plugin restarts) skip it until the reset
++   * time elapses. Falls back to the default disk-backed store unless the
++   * caller provides one (tests inject an in-memory clock-controllable
++   * store).
++   */
++  private readonly cooldowns: CooldownStore;
++
+   constructor(
+     private readonly client: OpencodeClient,
+     /**
+@@ -98,7 +129,37 @@ export class ForegroundFallbackManager {
+      */
+     private readonly chains: Record<string, string[]>,
+     private readonly enabled: boolean,
+-  ) {}
++    cooldowns?: CooldownStore,
++  ) {
++    this.cooldowns = cooldowns ?? createCooldownStore();
++  }
++
++  /** Expose the cooldown store (used by startup-time model selection). */
++  getCooldownStore(): CooldownStore {
++    return this.cooldowns;
++  }
++
++  /**
++   * Capture an Anthropic-style cooldown for the model that just hit a rate
++   * limit. Idempotent: only records forward-looking reset times. Persists
++   * to disk synchronously.
++   */
++  private captureCooldown(
++    sessionID: string,
++    error: unknown,
++  ): void {
++    const currentModel = this.sessionModel.get(sessionID);
++    if (!currentModel) return;
++    const headers = extractResponseHeaders(error);
++    const epoch = parseAnthropicCooldown(headers);
++    if (epoch === null) return;
++    this.cooldowns.set(currentModel, epoch);
++    log('[foreground-fallback] recorded model cooldown', {
++      sessionID,
++      model: currentModel,
++      until: new Date(epoch).toISOString(),
++    });
++  }
+ 
+   /**
+    * Process an OpenCode plugin event.
+@@ -133,6 +194,7 @@ export class ForegroundFallbackManager {
+         }
+         // Rate-limit on an individual message
+         if (info.error && isRateLimitError(info.error)) {
++          this.captureCooldown(sessionID, info.error);
+           await this.tryFallback(sessionID);
+         }
+         break;
+@@ -143,6 +205,7 @@ export class ForegroundFallbackManager {
+           | { sessionID?: string; error?: unknown }
+           | undefined;
+         if (props?.sessionID && props.error && isRateLimitError(props.error)) {
++          this.captureCooldown(props.sessionID, props.error);
+           await this.tryFallback(props.sessionID);
+         }
+         break;
+@@ -237,7 +300,18 @@ export class ForegroundFallbackManager {
+       const tried = this.sessionTried.get(sessionID)!;
+       if (currentModel) tried.add(currentModel);
+ 
+-      const nextModel = chain.find((m) => !tried.has(m));
++      // Prefer untried models that aren't currently in cooldown. If the
++      // entire chain is cooled down, fall back to "first untried" so the
++      // user isn't stuck waiting (cooldown is a soft hint, not a hard
++      // block — better to attempt and fail than to give up entirely).
++      // We let the cooldown store use its own clock so tests can inject
++      // a fake nowFn for deterministic behavior.
++      let nextModel = chain.find(
++        (m) => !tried.has(m) && !this.cooldowns.isCoolingDown(m),
++      );
++      if (!nextModel) {
++        nextModel = chain.find((m) => !tried.has(m));
++      }
+       if (!nextModel) {
+         log('[foreground-fallback] fallback chain exhausted', {
+           sessionID,
+diff --git a/src/index.ts b/src/index.ts
+index 929cb81..511306b 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -420,17 +420,29 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+       }
+ 
+       if (Object.keys(effectiveArrays).length > 0) {
++        // Pull the persistent cooldown store from the foreground fallback
++        // manager so startup-time model selection skips models whose
++        // Anthropic-style 5-hour rolling quota is still exhausted from a
++        // previous session. Without this, every fresh OpenCode start would
++        // burn ~30s of OpenCode-native exponential-backoff retries against
++        // a known-rate-limited model before ForegroundFallbackManager can
++        // catch the eventual error and switch to the next model.
++        const cooldowns = foregroundFallback.getCooldownStore();
+         for (const [agentName, modelArray] of Object.entries(effectiveArrays)) {
+           if (modelArray.length === 0) continue;
+ 
+-          // Use the first model in the effective array. Not all providers
+-          // require entries in opencodeConfig.provider — some are loaded
+-          // automatically by opencode (e.g. github-copilot, openrouter).
+-          // We cannot distinguish these from truly unconfigured providers
+-          // at config-hook time, so we cannot gate on the provider config
+-          // keys. Runtime failover is handled separately by
+-          // ForegroundFallbackManager.
+-          const chosen = modelArray[0];
++          // Prefer the first model that isn't currently in cooldown. If
++          // every model in the chain is cooled down, fall back to
++          // modelArray[0] so the user isn't fully stuck (the runtime
++          // ForegroundFallbackManager will still walk the chain on
++          // failure). Not all providers require entries in
++          // opencodeConfig.provider — some are loaded automatically by
++          // opencode (e.g. github-copilot, openrouter) — so we cannot gate
++          // on provider config keys here.
++          const available = modelArray.find(
++            (m) => !cooldowns.isCoolingDown(m.id),
++          );
++          const chosen = available ?? modelArray[0];
+           const entry = configAgent[agentName] as
+             | Record<string, unknown>
+             | undefined;
