@@ -6,8 +6,11 @@
 - The patched local OMO Slim path is in your OpenCode plugin list.
 - Prompt bridge files are present at `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.
 - Your OMO Slim config loads the `superpowers-bridge` preset.
+- Your live `~/.config/opencode/oh-my-opencode-slim.jsonc` actually includes the merged contents from `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc`.
 - Your local OMO Slim checkout was built after applying patches: `bun install`, then `bun run build`.
 - `bun run build` cleans `dist/` before emitting new files.
+
+If the behavior still looks old after patching source, check the config merge first. The most common failure is rebuilding the plugin checkout but forgetting to update `~/.config/opencode/oh-my-opencode-slim.jsonc`.
 
 ## Agent availability
 

@@ -8,6 +8,17 @@ See [`UPSTREAM.md`](./UPSTREAM.md) and [`UPSTREAM-LICENSE-oh-my-opencode-slim.tx
 
 Tell OpenCode: Fetch and follow instructions from https://github.com/BB-84C/omo-slim-superpowers-patch-kit/blob/main/docs/install.md
 
+## Most common installation miss
+
+Patching the `oh-my-opencode-slim` source checkout is **not** enough by itself.
+
+You must also merge this repo's OMO Slim config template into your live user config:
+
+- source: `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc`
+- target: `~/.config/opencode/oh-my-opencode-slim.jsonc`
+
+If you skip that merge, OpenCode keeps using your old OMO Slim preset and you will not actually get the published orchestrator/fallback behavior.
+
 ## What this repo does
 
 This kit is for users who want:

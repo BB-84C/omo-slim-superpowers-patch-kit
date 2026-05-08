@@ -9,6 +9,20 @@
 
 Back up your current `opencode.json` and `oh-my-opencode-slim.jsonc` before merging templates.
 
+## Critical note before you start
+
+Patching the local `oh-my-opencode-slim` source tree does **not** automatically update the OMO Slim preset that OpenCode loads at runtime.
+
+You must merge:
+
+- `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc`
+
+into:
+
+- `~/.config/opencode/oh-my-opencode-slim.jsonc`
+
+If you do not do this, OpenCode may still be running your previous preset even though the patched plugin source builds successfully.
+
 ## Agentic install workflow
 
 Ask your OpenCode agent to:
@@ -20,7 +34,7 @@ Ask your OpenCode agent to:
 5. run `bun run build`
 6. point OpenCode at that local checkout only after the build succeeds
 7. copy `prompt-bridges/` into `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`
-8. merge config templates without overwriting existing MCPs
+8. merge config templates — especially `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc` — without overwriting existing MCPs
 9. restart OpenCode
 10. verify with `docs/verify.md`
 
@@ -59,6 +73,8 @@ Then:
 
 1. Copy `prompt-bridges/*.md` to `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.
 2. Merge `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc`.
+   - This is the step that actually switches your runtime OMO Slim preset/config to the published worker layout.
+   - If you only patch source and skip this merge, your old preset can stay active.
 3. Merge `config-templates/opencode.plugin-snippet.jsonc` into `opencode.json`, replacing `<LOCAL_OMO_SLIM_PATH>` with the patched checkout path.
 4. Restart OpenCode.
 5. Follow `docs/verify.md`.

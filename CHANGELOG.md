@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-05-08 — docs follow-up
+
+### Changed
+- `README.md`, `docs/install.md`, and `docs/verify.md` now call out the most common installation miss explicitly: patching/building the local `oh-my-opencode-slim` checkout is not enough unless the user also merges `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc`.
+
 ## 2026-05-08 — v1.6.0
 
 ### Added
