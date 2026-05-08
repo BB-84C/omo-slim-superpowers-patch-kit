@@ -1,5 +1,10 @@
 # Install
 
+> [!IMPORTANT]
+> **Do not stop after patching/building the local `oh-my-opencode-slim` checkout.**
+> The runtime behavior in OpenCode comes from your live OMO Slim config too, so you must merge `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc`.
+> If you skip that merge, OpenCode can keep running your old preset even though the patched plugin source built successfully.
+
 ## Prerequisites
 
 - OpenCode is already installed.
@@ -10,6 +15,15 @@
 Back up your current `opencode.json` and `oh-my-opencode-slim.jsonc` before merging templates.
 
 ## Critical note before you start
+
+### TL;DR
+
+You need **both** of these:
+
+1. a patched-and-built local `oh-my-opencode-slim` source checkout;
+2. a merged live runtime config at `~/.config/opencode/oh-my-opencode-slim.jsonc`.
+
+If either half is missing, the install is incomplete.
 
 Patching the local `oh-my-opencode-slim` source tree does **not** automatically update the OMO Slim preset that OpenCode loads at runtime.
 
