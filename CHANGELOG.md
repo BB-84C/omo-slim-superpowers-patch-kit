@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-05-09 — release-basis docs refresh
+
+### Changed
+- Install-facing documentation now names `oh-my-opencode-slim v1.0.7` and `superpowers v5.1.0` as the current validated basis instead of the previous release pair.
+
 ## 2026-05-08 — docs follow-up
 
 ### Changed
@@ -79,7 +84,7 @@
     - In `tryFallback()`, chain selection prefers untried models that AREN'T currently in cooldown; falls back to "first untried" if every model is cooling (cooldown is a soft hint, not a hard block)
     - New public `getCooldownStore()` accessor for downstream consumers
   - Plugin init in `src/index.ts` now uses the same cooldown store at **startup-time model selection** (in the `effectiveArrays` loop): the first non-cooling model from each agent's chain is chosen as the startup model. This eliminates the ~30s of OpenCode-native exponential-backoff retries against a known-rate-limited model on the first message of every fresh session.
-  - 22 new tests across `cooldowns.test.ts` (17 unit) and `index.test.ts` (5 integration). All 138 foreground-fallback + v1.0-1.2 regression tests pass on clean `omo-slim v1.0.1 + 0001+0002+0003+0004+0005`.
+  - 22 new tests across `cooldowns.test.ts` (17 unit) and `index.test.ts` (5 integration). All 138 foreground-fallback plus early-series regression tests passed on the then-current clean OMO Slim basis plus patches 0001+0002+0003+0004+0005.
 - Added new snapshots: `src/hooks/foreground-fallback/{index.ts,index.test.ts,cooldowns.ts,cooldowns.test.ts}` (post-0005); updated `src/index.ts` (post-0005).
 - Use case: register a model array on the main `orchestrator` agent (e.g. `[opus-4-7, gpt-5.4]`). When Opus's 5-hour rolling quota is exhausted:
   - **Within a session**: first message detects 429 + parses reset header + persists cooldown + replays last user message on gpt-5.4 (zero-wait subsequent turns; opus skipped automatically)

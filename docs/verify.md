@@ -2,6 +2,7 @@
 
 ## Static checks
 
+- The install basis is `oh-my-opencode-slim v1.0.7` with `superpowers v5.1.0`.
 - `superpowers` is in your OpenCode plugin list.
 - The patched local OMO Slim path is in your OpenCode plugin list.
 - Prompt bridge files are present at `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.
@@ -34,8 +35,6 @@ Concrete probes:
 @fixer use writing-plans to draft a plan for this repo
 @oracle use systematic-debugging to investigate a suspected bug
 @oracle use subagent-driven-development to delegate implementation
-@orchestrator-delta use best-of-n-with-judge and summarize the phases without starting a fan-out
-@fixer use best-of-n-with-judge
 ```
 
 ## MCP checks
@@ -94,3 +93,10 @@ Only run these if you installed the optional `opencode-config/` example setup:
 - Dispatch utility agents `scout`, `validator`, `gist`, and `wildcard`.
 - Confirm variants inherit base Superpowers policy.
 - Load `best-of-n-with-judge` from a root orchestrator without starting a fan-out.
+
+Concrete optional probes:
+
+```text
+@orchestrator-delta use best-of-n-with-judge and summarize the phases without starting a fan-out
+@fixer use best-of-n-with-judge
+```

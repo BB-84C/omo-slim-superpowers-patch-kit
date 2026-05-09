@@ -10,9 +10,21 @@
 - OpenCode is already installed.
 - `superpowers` is installed or can be installed.
 - `oh-my-opencode-slim` is available locally or can be cloned locally.
-- Validated basis: `oh-my-opencode-slim v1.0.1` and `superpowers v5.0.7`.
+- This patch-kit repo has been cloned or downloaded locally.
+- Validated basis: `oh-my-opencode-slim v1.0.7` and `superpowers v5.1.0`.
 
 Back up your current `opencode.json` and `oh-my-opencode-slim.jsonc` before merging templates.
+
+## Step 1: clone or download this patch-kit
+
+Fresh installs start with a local copy of this repository. Clone it, or download and extract the ZIP, before using any `/absolute/path/to/omo-slim-superpowers-patch-kit/...` examples below.
+
+```bash
+git clone https://github.com/BB-84C/omo-slim-superpowers-patch-kit.git
+cd omo-slim-superpowers-patch-kit
+```
+
+In the commands below, replace `/absolute/path/to/omo-slim-superpowers-patch-kit` with the absolute path to that local patch-kit checkout or extracted directory.
 
 ## Critical note before you start
 
@@ -41,38 +53,43 @@ If you do not do this, OpenCode may still be running your previous preset even t
 
 Ask your OpenCode agent to:
 
-1. locate or clone a local editable checkout of `oh-my-opencode-slim`
-2. check out upstream tag `v1.0.1`
-3. apply patch files from `patches/oh-my-opencode-slim/` in numeric order
-4. run `bun install`
-5. run `bun run build`
-6. point OpenCode at that local checkout only after the build succeeds
-7. copy `prompt-bridges/` into `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`
-8. merge config templates — especially `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc` — without overwriting existing MCPs
-9. restart OpenCode
-10. verify with `docs/verify.md`
+1. clone or download this patch-kit repo locally
+2. locate or clone a local editable checkout of `oh-my-opencode-slim`
+3. check out upstream tag `v1.0.7`
+4. apply the default fresh-install rollup patch: `patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch`
+5. run `bun install`
+6. run `bun run build`
+7. point OpenCode at that local checkout only after the build succeeds
+8. copy `prompt-bridges/` into `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`
+9. merge config templates — especially `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc` — without overwriting existing MCPs
+10. restart OpenCode
+11. verify with `docs/verify.md`
 
 ## Manual install workflow
+
+Start from the local patch-kit checkout or extracted ZIP created in Step 1. Then clone the upstream OMO Slim source separately:
 
 ```bash
 git clone https://github.com/alvinunreal/oh-my-opencode-slim.git
 cd oh-my-opencode-slim
-git checkout v1.0.1
+git checkout v1.0.7
 ```
 
-Apply patches in numeric order:
+Apply the default `v1.0.7` rollup patch:
 
 ```bash
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0001-superpowers-skill-gating.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0002-omo-managed-mcp-gating.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0003-best-of-n-agent-name-resolution.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0004-orchestrator-prefix-matching.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0005-anthropic-cooldown-tracking.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0006-permission-redesign.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/0007-final-orchestrator-pivot-cleanup.patch
+git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch
 ```
 
-Patch 0003 is safe even if you do not copy the optional best-of-N example setup; it only generalizes policy resolution and adds utility policy entries.
+Do not also apply the old top-level `0001`–`0007` patch chain. That split sequence is retained as legacy/historical material for review and archaeology, not as the default fresh-install path.
+
+The rollup is not a pure additive overlay on every upstream v1.0.7 surface. It
+matches the validated slim target, which intentionally omits upstream-only
+surfaces that were not carried forward for this release path: the separate TUI
+companion package surface, Divoom display integration, the `doctor` diagnostic
+CLI surface, and task-session-manager hook/docs. Fresh installs should not add a
+missing TUI plugin to `tui.json`; configure only the patched plugin entry in
+`opencode.json`.
 
 Install and build:
 
@@ -81,7 +98,9 @@ bun install
 bun run build
 ```
 
-Patch 0007 makes `bun run build` clean `dist/` first.
+The rollup includes the legacy patch-0007 build cleanup, so `bun run build` cleans `dist/` first.
+
+Legacy note: in the old split patch chain, patch 0003 was safe even if you did not copy the optional best-of-N example setup; it only generalized policy resolution and added utility policy entries. Fresh installs should use the rollup patch instead of replaying that chain.
 
 Then:
 

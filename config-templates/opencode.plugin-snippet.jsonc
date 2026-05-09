@@ -1,6 +1,6 @@
 {
   "plugin": [
-    "superpowers@git+https://github.com/obra/superpowers.git#v5.0.7",
+    "superpowers@git+https://github.com/obra/superpowers.git#v5.1.0",
     // Replace with the absolute path to your local patched oh-my-opencode-slim checkout.
     // Example: "C:\\path\\to\\oh-my-opencode-slim" or "/path/to/oh-my-opencode-slim"
     "<LOCAL_OMO_SLIM_PATH>"

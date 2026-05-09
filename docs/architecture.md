@@ -8,6 +8,10 @@
 
 The cooperation model is simple: Superpowers directs the workflow, while OMO Slim provides worker seats and model routing. The plugin snippet disables OpenCode's default `general` and `explore` lanes so they do not compete with the patched worker layout.
 
+## Version basis
+
+The current validated integration basis is `oh-my-opencode-slim v1.0.7` with `superpowers v5.1.0`.
+
 ## Permission model
 
 The patch kit governs three resource classes:

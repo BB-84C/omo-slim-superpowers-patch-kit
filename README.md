@@ -6,7 +6,22 @@ See [`UPSTREAM.md`](./UPSTREAM.md) and [`UPSTREAM-LICENSE-oh-my-opencode-slim.tx
 
 ## Quick start
 
-Tell OpenCode: Fetch and follow instructions from https://github.com/BB-84C/omo-slim-superpowers-patch-kit/blob/main/docs/install.md
+Fresh users should first clone or download this patch-kit repo so all later path examples have a real local base directory:
+
+```bash
+git clone https://github.com/BB-84C/omo-slim-superpowers-patch-kit.git
+cd omo-slim-superpowers-patch-kit
+```
+
+Then tell OpenCode: Follow the instructions in `docs/install.md` from this local patch-kit checkout.
+
+The default fresh-install patch for `oh-my-opencode-slim v1.0.7` is:
+
+```text
+patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch
+```
+
+The older top-level `0001`–`0007` patch chain is retained as legacy/historical reference material only; new installs should use the versioned rollup patch above.
 
 > [!IMPORTANT]
 > **If you only patch/build the local `oh-my-opencode-slim` checkout, the install is still incomplete.**
@@ -29,8 +44,9 @@ This kit is for users who want:
 
 - `superpowers` to remain the workflow/controller layer
 - `oh-my-opencode-slim` to provide specialist agents and per-agent model routing
-- only `superpowers` skills and OMO-managed MCPs to be selectively restricted
-- custom skills and custom MCPs left untouched
+- `superpowers` skills to be selectively restricted, with reserved root-only skills kept on orchestrator lanes
+- OMO-managed MCPs and the documented restricted-MCP blacklist to apply without clobbering unrelated custom MCPs
+- non-Superpowers/custom skills to continue following the plugin's tier policy rather than a blanket global deny
 - an automatic retry pivot from `orchestrator` to `orchestrator-beta`
 - a manual GPT root, `orchestrator-delta`, without beta fallback semantics
 
@@ -38,27 +54,36 @@ This kit is for users who want:
 
 Validated with:
 
-- `superpowers v5.0.7`
-- `oh-my-opencode-slim v1.0.1`
+- `superpowers v5.1.0`
+- `oh-my-opencode-slim v1.0.7`
 
 ## What this kit patches
 
-This patch kit changes OMO Slim in seven ways:
+The default `v1.0.7` rollup patch starts from upstream OMO Slim v1.0.7 and
+lands the seven Superpowers bridge changes below. It also intentionally keeps
+the validated slim target pruned of upstream-only v1.0.7 surfaces that are not
+part of this release path: the separate TUI companion package surface, Divoom
+display integration, the `doctor` diagnostic CLI surface, and the
+task-session-manager hook/docs.
 
-1. **Superpowers-only skill gating** (0001): restricts only Superpowers skills.
-2. **OMO-managed MCP-only gating** (0002): restricts only OMO built-ins (`websearch`, `context7`, `grep_app`).
-3. **Best-of-N agent name resolution** (0003): variants like `fixer-alpha` inherit base policy by suffix stripping.
-4. **Orchestrator prefix matching** (0004): `orchestrator-*` roots inherit primary-mode prompt and root posture.
-5. **Anthropic-aware cooldown tracking** (0005): persists reset-header cooldowns and skips cooling models.
-6. **Agent permission redesign** (0006): enforces read-only tier-3 agents, restricted MCP blacklist, reserved root-only skills, and deep permission merges.
-7. **Final orchestrator pivot cleanup** (0007): makes beta the only automatic pivot/fallback-enforcing root, adds manual-only delta, removes debug/degraded knobs, and cleans `dist/` before build.
+The seven bridge changes are:
+
+1. **Superpowers-only skill gating**: restricts only Superpowers skills.
+2. **OMO-managed MCP-only gating**: restricts only OMO built-ins (`websearch`, `context7`, `grep_app`).
+3. **Best-of-N agent name resolution**: variants like `fixer-alpha` inherit base policy by suffix stripping.
+4. **Orchestrator prefix matching**: `orchestrator-*` roots inherit primary-mode prompt and root posture.
+5. **Anthropic-aware cooldown tracking**: persists reset-header cooldowns and skips cooling models.
+6. **Agent permission redesign**: enforces read-only tier-3 agents, restricted MCP blacklist, reserved root-only skills, and deep permission merges.
+7. **Final orchestrator pivot cleanup**: makes beta the only automatic pivot/fallback-enforcing root, adds manual-only delta, removes debug/degraded knobs, and cleans `dist/` before build.
+
+Legacy note: the old split patch files `0001`–`0007` remain in the repository to show the historical change sequence, but they are not the default fresh-install path and should not be applied in addition to the `v1.0.7` rollup.
 
 Important final behavior:
 
 - Automatic retry pivot is exactly `orchestrator` -> `orchestrator-beta`.
 - `orchestrator-beta` is the only root identity that forces Anthropic-primary child tasks onto `__task_fallback` shadows.
 - `orchestrator-delta` is manual-only and does not force child fallback.
-- Reserved orchestrator-only skills include `orchestrator`, `orchestrator-beta`, and `orchestrator-delta`.
+- Reserved orchestrator-only skill access is limited to `orchestrator`, `orchestrator-beta`, and `orchestrator-delta`.
 - Forced degraded override and debug retry probe commands are not supported public knobs.
 
 ## Optional: Best-of-N + Fast-Lane example setup
