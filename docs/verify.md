@@ -2,7 +2,7 @@
 
 ## Static checks
 
-- The install basis is `oh-my-opencode-slim v1.0.7` with `superpowers v5.1.0`.
+- The install basis is `oh-my-opencode-slim v1.1.2` with `superpowers v5.1.0`.
 - `superpowers` is in your OpenCode plugin list.
 - The patched local OMO Slim path is in your OpenCode plugin list.
 - Prompt bridge files are present at `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.

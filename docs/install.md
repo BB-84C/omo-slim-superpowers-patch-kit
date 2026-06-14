@@ -11,7 +11,7 @@
 - `superpowers` is installed or can be installed.
 - `oh-my-opencode-slim` is available locally or can be cloned locally.
 - This patch-kit repo has been cloned or downloaded locally.
-- Validated basis: `oh-my-opencode-slim v1.0.7` and `superpowers v5.1.0`.
+- Validated basis: `oh-my-opencode-slim v1.1.2` and `superpowers v5.1.0`.
 
 Back up your current `opencode.json` and `oh-my-opencode-slim.jsonc` before merging templates.
 
@@ -55,8 +55,8 @@ Ask your OpenCode agent to:
 
 1. clone or download this patch-kit repo locally
 2. locate or clone a local editable checkout of `oh-my-opencode-slim`
-3. check out upstream tag `v1.0.7`
-4. apply the default fresh-install rollup patch: `patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch`
+3. check out upstream tag `v1.1.2`
+4. apply the default fresh-install rollup patch: `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch`
 5. run `bun install`
 6. run `bun run build`
 7. point OpenCode at that local checkout only after the build succeeds
@@ -72,24 +72,24 @@ Start from the local patch-kit checkout or extracted ZIP created in Step 1. Then
 ```bash
 git clone https://github.com/alvinunreal/oh-my-opencode-slim.git
 cd oh-my-opencode-slim
-git checkout v1.0.7
+git checkout v1.1.2
 ```
 
-Apply the default `v1.0.7` rollup patch:
+Apply the default `v1.1.2` rollup patch:
 
 ```bash
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch
+git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
 ```
 
-Do not also apply the old top-level `0001`–`0007` patch chain. That split sequence is retained as legacy/historical material for review and archaeology, not as the default fresh-install path.
+Do not also apply the old top-level `0001`–`0007` patch chain. That split sequence is retained as legacy/historical material for review and archaeology, not as the default fresh-install path. Previous release: the `v1.0.7` rollup remains available at `patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch` for historical installs only; it is not the default path.
 
-The rollup is not a pure additive overlay on every upstream v1.0.7 surface. It
+The rollup is not a pure additive overlay on every upstream v1.1.2 surface. It
 matches the validated slim target, which intentionally omits upstream-only
-surfaces that were not carried forward for this release path: the separate TUI
-companion package surface, Divoom display integration, the `doctor` diagnostic
-CLI surface, and task-session-manager hook/docs. Fresh installs should not add a
-missing TUI plugin to `tui.json`; configure only the patched plugin entry in
-`opencode.json`.
+surfaces that were not carried forward for this release path: divoom, tui,
+doctor CLI, and task-session-manager. It keeps upstream's auto-update hardening,
+session-goal command, subtask worker sessions, and clonedeps skill. Fresh
+installs should not add a missing TUI plugin to `tui.json`; configure only the
+patched plugin entry in `opencode.json`.
 
 Install and build:
 

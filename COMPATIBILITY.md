@@ -5,15 +5,15 @@
 This patch kit is currently validated against:
 
 - `superpowers v5.1.0`
-- `oh-my-opencode-slim v1.0.7`
+- `oh-my-opencode-slim v1.1.2`
 
 Default fresh installs should apply the versioned rollup patch:
 
 ```text
-patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch
+patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
 ```
 
-The older top-level `0001`–`0007` patch files are legacy/historical breakdowns of the same integration work. They are useful for reviewing provenance, but they are not the default path for a new `v1.0.7` install and should not be applied on top of the rollup.
+The older top-level `0001`–`0007` patch files are legacy/historical breakdowns of the same integration work. They are useful for reviewing provenance, but they are not the default path for a new `v1.1.2` install and should not be applied on top of the rollup. The `v1.0.7` rollup is the previous release.
 
 ## Expectations for nearby versions
 
@@ -23,7 +23,10 @@ If your local versions are significantly older, upgrade first.
 
 ## What to check when versions differ
 
-The file list below uses the legacy split-patch numbers as historical pointers to where each behavior came from. For a fresh install on the validated `v1.0.7` basis, use the rollup patch above.
+Auto-continue variant recognition is new in this kit's v1.1.2 release.
+
+
+The file list below uses the legacy split-patch numbers as historical pointers to where each behavior came from. For a fresh install on the validated `v1.1.2` basis, use the rollup patch above; the `v1.0.7` basis is the previous release.
 
 - `src/cli/skills.ts` (touched by patches 0001 and 0003)
 - `src/cli/superpowers-policy.ts` (introduced by 0001, modified by 0003 and 0004)

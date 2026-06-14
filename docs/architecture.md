@@ -10,7 +10,7 @@ The cooperation model is simple: Superpowers directs the workflow, while OMO Sli
 
 ## Version basis
 
-The current validated integration basis is `oh-my-opencode-slim v1.0.7` with `superpowers v5.1.0`.
+The current validated integration basis is `oh-my-opencode-slim v1.1.2` with `superpowers v5.1.0`.
 
 ## Permission model
 

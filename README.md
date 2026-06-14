@@ -15,10 +15,10 @@ cd omo-slim-superpowers-patch-kit
 
 Then tell OpenCode: Follow the instructions in `docs/install.md` from this local patch-kit checkout.
 
-The default fresh-install patch for `oh-my-opencode-slim v1.0.7` is:
+The default fresh-install patch for `oh-my-opencode-slim v1.1.2` is:
 
 ```text
-patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch
+patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
 ```
 
 The older top-level `0001`–`0007` patch chain is retained as legacy/historical reference material only; new installs should use the versioned rollup patch above.
@@ -55,16 +55,16 @@ This kit is for users who want:
 Validated with:
 
 - `superpowers v5.1.0`
-- `oh-my-opencode-slim v1.0.7`
+- `oh-my-opencode-slim v1.1.2`
 
 ## What this kit patches
 
-The default `v1.0.7` rollup patch starts from upstream OMO Slim v1.0.7 and
-lands the seven Superpowers bridge changes below. It also intentionally keeps
-the validated slim target pruned of upstream-only v1.0.7 surfaces that are not
-part of this release path: the separate TUI companion package surface, Divoom
-display integration, the `doctor` diagnostic CLI surface, and the
-task-session-manager hook/docs.
+The default `v1.1.2` rollup patch starts from upstream OMO Slim v1.1.2 and
+lands the seven Superpowers bridge changes below. It also carries upstream's
+auto-update hardening, session-goal command, subtask worker sessions, and
+clonedeps skill. The validated slim target still intentionally prunes divoom,
+tui, doctor CLI, and task-session-manager surfaces that are not part of this
+release path.
 
 The seven bridge changes are:
 
@@ -76,11 +76,12 @@ The seven bridge changes are:
 6. **Agent permission redesign**: enforces read-only tier-3 agents, restricted MCP blacklist, reserved root-only skills, and deep permission merges.
 7. **Final orchestrator pivot cleanup**: makes beta the only automatic pivot/fallback-enforcing root, adds manual-only delta, removes debug/degraded knobs, and cleans `dist/` before build.
 
-Legacy note: the old split patch files `0001`–`0007` remain in the repository to show the historical change sequence, but they are not the default fresh-install path and should not be applied in addition to the `v1.0.7` rollup.
+Legacy note: the old split patch files `0001`–`0007` remain in the repository to show the historical change sequence, but they are not the default fresh-install path and should not be applied in addition to the `v1.1.2` rollup.
 
 Important final behavior:
 
 - Automatic retry pivot is exactly `orchestrator` -> `orchestrator-beta`.
+- Auto-continue now recognizes `orchestrator` variants (`orchestrator-beta`, `orchestrator-delta`, etc.), not just the literal `orchestrator`.
 - `orchestrator-beta` is the only root identity that forces Anthropic-primary child tasks onto `__task_fallback` shadows.
 - `orchestrator-delta` is manual-only and does not force child fallback.
 - Reserved orchestrator-only skill access is limited to `orchestrator`, `orchestrator-beta`, and `orchestrator-delta`.

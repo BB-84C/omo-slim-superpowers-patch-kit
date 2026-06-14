@@ -1,5 +1,40 @@
 # Changelog
 
+## v1.1.2 release (2026-06-13)
+
+Refreshed onto upstream `oh-my-opencode-slim v1.1.2` (validated basis = `oh-my-opencode-slim v1.1.2` + `superpowers v5.1.0`). All prior bridge semantics preserved.
+
+### Added
+- New rollup `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch` reapplies the full superpowers bridge onto a clean `v1.1.2` checkout in one step.
+- Auto-continue now recognizes orchestrator variants. Previously the `todo-continuation` hook gated on a literal `agent === 'orchestrator'` check at three sites, which dropped auto-continue support for `orchestrator-beta`, `orchestrator-delta`, etc. The hook now routes through a shared `isOrchestratorAgent()` helper in `src/utils/orchestrator-identity.ts` (prefix-match on `orchestrator`).
+- Snapshot anchor for `src/hooks/todo-continuation/index.ts` so the variant fix is part of the comparison surface.
+
+### Fixed (carried forward from upstream that the v1.0.7-based merge had lost)
+- `displayName` safe-alias validation in `src/agents/index.ts`. Upstream v1.1.2 added an explicit `isSafeDisplayName(normalized)` check that throws `displayName '<x>' must match /^[a-z][a-z0-9_-]*$/i` when a user-supplied displayName contains spaces or other unsafe characters; our v1.0.7-based merge resolution did not carry this check forward. This release reintroduces the constant `SAFE_AGENT_ALIAS_RE`, the `isSafeDisplayName(...)` helper, and the throw on unsafe displayName at the validation loop. `display-name.test.ts` and `index.test.ts` regression cases pass.
+
+### Inherited from upstream v1.1.0 / v1.1.1 / v1.1.2 (we keep)
+- `session-goal` hook + `/session-goal` command (subtask worker sessions can now carry a session goal).
+- `subtask` tool surface (new `/subtask` worker sessions for parallel-agent delegation).
+- `clonedeps` skill (utility for clone-and-then-deepwork-on-deps).
+- `phase-reminder` UI/chat-history leak fix (upstream PR #448).
+- `apply_patch` readonly-args fix (upstream PR #449).
+- Insufficient-balance detection added to the foreground-fallback rate-limit classifier (upstream PR #484).
+- Auto-update channel/dist-tag hardening (upstream PRs #519–#525, the "v1-safe-auto-update" chain).
+- README translations (Japanese, Korean, Chinese) and contributor metadata.
+
+### Still pruned (intentional)
+- `src/divoom/*`, `src/tui*`, `src/cli/doctor*`, `src/hooks/task-session-manager/*` — same exclusions as the v1.0.7 release; v1.1.2 did not change our stance on these.
+
+### Validated basis
+- `oh-my-opencode-slim v1.1.2` (commit `89f7a40`)
+- `superpowers v5.1.0` (unchanged)
+
+### Fresh-install simulation
+- Apply-check on clean `v1.1.2` clone: PASS, no whitespace warnings
+- `bun install`, `bun test`, `bun run build`, `bunx tsc --noEmit`, `bun test scripts/build-cleanliness.test.ts`: all PASS
+- Fresh-install focused test suite: **319 pass / 0 fail**.
+- Full test suite on live tree: 1180 pass / 75 fail (the 75 fails are all Windows path/interview env-sensitive tests that pre-existed in the v1.0.7 baseline and in bare upstream v1.1.2; no new regressions introduced by this refresh).
+
 ## 2026-05-09 — release-basis docs refresh
 
 ### Changed
