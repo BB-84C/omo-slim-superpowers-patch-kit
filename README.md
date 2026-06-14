@@ -57,6 +57,36 @@ Validated with:
 - `superpowers v5.1.0`
 - `oh-my-opencode-slim v1.1.2`
 
+## Compatibility scope: 1.x only, no 2.x support
+
+This patch kit targets the `oh-my-opencode-slim` 1.x line and **does not support 2.x**. The 1.x ceiling is `v1.1.2`. We do not plan to publish a 2.x rollup.
+
+We re-evaluated upstream `v2.0.0` stable (released 2026-06-12) against the harness requirements this kit is designed around. Five operator-facing gaps that we flagged on the `v2.0.0-beta.7` preview are still open in `v2.0.0` stable:
+
+1. **No hung-job detection.** The `BackgroundJobBoard` tracks `running` / `completed` / `error` / `cancelled` / `reconciled` flags, but there is no watchdog, heartbeat, or stale-job sweep. A `timedOut` mark only appears after the orchestrator itself happens to call `task_status` with a timeout; the harness does not surface stuck jobs on its own.
+2. **No hard dependency barrier.** Dependency ordering between lanes is documented as advisory and lives in the orchestrator prompt. No runtime primitive prevents a dependent lane from being dispatched before its blocker reaches terminal + reconciled.
+3. **No auto-recovery.** Cancellation lifecycle was hardened (`markCancelled(force?)`, stale-state guard), but there is no auto-relaunch when a child session dies or a provider drops.
+4. **No TUI parity for background jobs.** `v2.0.0` ships the same flat TUI surface as `v2.0.0-beta.7`; no sidebar, attach-to-running-child surface, or per-job status panel was added. Upstream OpenCode itself is moving the other way: PR [`anomalyco/opencode#28508`](https://github.com/anomalyco/opencode/pull/28508) (merged 2026-05-20) **removed** always-visible subagent tabs in favor of an on-demand picker. Operator visibility issues [`#26062`](https://github.com/anomalyco/opencode/issues/26062), [`#28047`](https://github.com/anomalyco/opencode/pull/28047), [`#28171`](https://github.com/anomalyco/opencode/issues/28171), [`#28738`](https://github.com/anomalyco/opencode/issues/28738), [`#28995`](https://github.com/anomalyco/opencode/issues/28995), [`#27898`](https://github.com/anomalyco/opencode/issues/27898) all remain unresolved.
+5. **`task_status` correctness was sidestepped, not fixed.** OMO `v2.0.0` removed `task_status` as a tool ([PR #481](https://github.com/alvinunreal/oh-my-opencode-slim/pull/481) lists "remove task_status" as a goal) and now reconciles via `session.idle` hook events. Upstream OpenCode issue [`#27827`](https://github.com/anomalyco/opencode/issues/27827) (`task_status returns 'cancelled' for completed tasks`) closed without a linked fix; related bug [`#28995`](https://github.com/anomalyco/opencode/issues/28995) reopened the same failure mode.
+
+Two further changes in `v2.0.0` would actively reduce parity with the workflow this kit supports:
+
+- **Auto-continue removed.** `v2.0.0` ships the commit `Remove auto-continue feature`. Auto-continue is core to this kit's orchestrator loop; the variant-recognition fix in this release (see `CHANGELOG.md`) doubles down on it.
+- **Background orchestration is now the default**, with the orchestrator reframed as a scheduler rather than the primary worker. That is a different operating model from the worker-with-delegation orchestrator this kit is built around.
+
+### Why we expect v1.1.2 to be the long-term stable 1.x
+
+Structural signals from upstream all point at `v1.1.2` being the de-facto frozen 1.x release:
+
+- No `v1.1.3` tag exists; no v1.x release has shipped since `v1.1.2` (2026-06-08).
+- Upstream's `master` branch now contains `v2.x` code.
+- The npm `latest` dist-tag points at `2.0.1`; there is no `1.x-lts` dist-tag.
+- No `release/1.x` or `1.x-maintenance` branch exists.
+- Every open PR upstream targets `master` (v2.x).
+- Neither the `v1.1.2` release notes nor the `v2.0.0` README contains a 1.x EOL or LTS declaration; the line is simply not being touched.
+
+Because of that, this kit can stay on `v1.1.2` for the foreseeable future without forcing frequent rollup refreshes. That stability is itself part of why we recommend users stay on the 1.x line until — and only if — the five harness gaps above are concretely closed in a future 2.x release.
+
 ## What this kit patches
 
 The default `v1.1.2` rollup patch starts from upstream OMO Slim v1.1.2 and
