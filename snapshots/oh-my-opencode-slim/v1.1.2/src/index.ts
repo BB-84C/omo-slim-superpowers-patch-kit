@@ -347,6 +347,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
       cooldownMs: config.todoContinuation?.cooldownMs ?? 3000,
       autoEnable: config.todoContinuation?.autoEnable ?? false,
       autoEnableThreshold: config.todoContinuation?.autoEnableThreshold ?? 4,
+      // Preserve variant agent identity (e.g. orchestrator-beta) and
+      // user-selected model on auto-continue resume, rather than reverting
+      // to the JSONC-defined default orchestrator and model.
+      getSessionAgent: (sessionID) => sessionAgentMap.get(sessionID),
+      getSessionModel: (sessionID) =>
+        foregroundFallback.getSessionModel(sessionID),
     });
     sessionGoalHook = createSessionGoalHook(ctx, config, {
       getAgentName: (sessionID) => sessionAgentMap.get(sessionID),

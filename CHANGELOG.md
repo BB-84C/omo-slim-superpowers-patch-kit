@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-08 — auto-continue variant agent + model preservation fix
+
+### Fixed
+- Auto-continue now preserves the session's active variant agent (`orchestrator-beta`, `orchestrator-delta`, etc.) and user-selected model across continuation prompts. Previously the auto-continue prompt call omitted `agent` and `model` from the body, causing OpenCode to resolve the default `orchestrator` agent with its JSONC-defined model — dropping both variant identity and any temporary model overrides the user had selected in-session.
+- Root cause: `todo-continuation/index.ts:632-638` called `session.prompt()` without `agent` or `model`. The hook had no way to look up either value for a session.
+- Fix: added `getSessionAgent` / `getSessionModel` callbacks to `createTodoContinuationHook` config, exposed `ForegroundFallbackManager.getSessionModel()` (the manager already tracked both agent and model per session via `message.updated` events), and wired the callbacks from `index.ts` using the existing `sessionAgentMap` and the new public accessor. The continuation body now includes `agent` and `model` when available (no-op if not tracked — backward compatible).
+
+### Changed files (snapshot)
+- `src/hooks/todo-continuation/index.ts` — import `parseModelReference`, accept `getSessionAgent`/`getSessionModel` config callbacks, include `agent` and `model` in continuation prompt body
+- `src/hooks/foreground-fallback/index.ts` — add public `getSessionModel(sessionID)` method
+- `src/index.ts` — wire `getSessionAgent` / `getSessionModel` callbacks to `createTodoContinuationHook` constructor
+
 ## v1.1.2 release (2026-06-13)
 
 Refreshed onto upstream `oh-my-opencode-slim v1.1.2` (validated basis = `oh-my-opencode-slim v1.1.2` + `superpowers v5.1.0`). All prior bridge semantics preserved.

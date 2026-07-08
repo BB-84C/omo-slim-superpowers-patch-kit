@@ -6,6 +6,7 @@ import {
   SLIM_INTERNAL_INITIATOR_MARKER,
 } from '../../utils';
 import { isOrchestratorAgent } from '../../utils/orchestrator-identity';
+import { parseModelReference, type PromptBody } from '../../utils/session';
 import { createTodoHygiene } from './todo-hygiene';
 
 const HOOK_NAME = 'todo-continuation';
@@ -120,6 +121,12 @@ export function createTodoContinuationHook(
     cooldownMs?: number;
     autoEnable?: boolean;
     autoEnableThreshold?: number;
+    /** Return the runtime agent name for a session (e.g. 'orchestrator-beta').
+     *  Used to preserve variant identity when auto-continue resumes a session. */
+    getSessionAgent?: (sessionID: string) => string | undefined;
+    /** Return the last-observed model string for a session ("provider/model").
+     *  Used to preserve user-selected model overrides on auto-continue resume. */
+    getSessionModel?: (sessionID: string) => string | undefined;
   },
 ): {
   tool: Record<string, unknown>;
@@ -587,24 +594,37 @@ export function createTodoContinuationHook(
         delayMs: cooldownMs,
       });
 
-      // Show countdown notification (noReply = agent doesn't respond)
+      // Show countdown notification (noReply = agent doesn't respond).
+      // Include agent+model so the notification row in OpenCode's TUI
+      // preserves the session's variant identity rather than reverting to
+      // the JSONC-defined default orchestrator.
       markNotificationStarted(sessionID);
+      const notifyAgent = config?.getSessionAgent?.(sessionID);
+      const notifyModelStr = config?.getSessionModel?.(sessionID);
+      const notifyModel = notifyModelStr
+        ? parseModelReference(notifyModelStr)
+        : undefined;
+
+      const notifyBody: PromptBody = {
+        noReply: true,
+        parts: [
+          {
+            type: 'text',
+            text: [
+              `⎔ Auto-continue: ${incompleteCount} incomplete todos remaining — resuming in ${cooldownMs / 1000}s — Esc×2 to cancel`,
+              '',
+              '[system status: continue without acknowledging this notification]',
+            ].join('\n'),
+          },
+        ],
+      };
+      if (notifyAgent) notifyBody.agent = notifyAgent;
+      if (notifyModel) notifyBody.model = notifyModel;
+
       ctx.client.session
         .prompt({
           path: { id: sessionID },
-          body: {
-            noReply: true,
-            parts: [
-              {
-                type: 'text',
-                text: [
-                  `⎔ Auto-continue: ${incompleteCount} incomplete todos remaining — resuming in ${cooldownMs / 1000}s — Esc×2 to cancel`,
-                  '',
-                  '[system status: continue without acknowledging this notification]',
-                ].join('\n'),
-              },
-            ],
-          },
+          body: notifyBody,
         })
         .catch(() => {
           /* best-effort notification */
@@ -629,11 +649,25 @@ export function createTodoContinuationHook(
 
         state.isAutoInjecting = true;
         try {
+          // Preserve the session's active agent and model so auto-continue
+          // does not revert to the JSON-defined default.  Variants
+          // (orchestrator-beta, orchestrator-delta, etc.) and temporary
+          // model overrides survive across continuation prompts.
+          const agent = config?.getSessionAgent?.(sessionID);
+          const modelStr = config?.getSessionModel?.(sessionID);
+          const model = modelStr
+            ? parseModelReference(modelStr)
+            : undefined;
+
+          const body: PromptBody = {
+            parts: [createInternalAgentTextPart(CONTINUATION_PROMPT)],
+          };
+          if (agent) body.agent = agent;
+          if (model) body.model = model;
+
           await ctx.client.session.prompt({
             path: { id: sessionID },
-            body: {
-              parts: [createInternalAgentTextPart(CONTINUATION_PROMPT)],
-            },
+            body,
           });
           state.consecutiveContinuations++;
           log(`[${HOOK_NAME}] Continuation injected`, {

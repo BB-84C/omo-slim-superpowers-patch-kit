@@ -75,10 +75,11 @@ cd oh-my-opencode-slim
 git checkout v1.1.2
 ```
 
-Apply the default `v1.1.2` rollup patch:
+Apply the default `v1.1.2` rollup patch and the auto-continue fix:
 
 ```bash
 git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
+git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.1.2/0002-auto-continue-agent-model-preservation.patch
 ```
 
 Do not also apply the old top-level `0001`–`0007` patch chain. That split sequence is retained as legacy/historical material for review and archaeology, not as the default fresh-install path. Previous release: the `v1.0.7` rollup remains available at `patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch` for historical installs only; it is not the default path.

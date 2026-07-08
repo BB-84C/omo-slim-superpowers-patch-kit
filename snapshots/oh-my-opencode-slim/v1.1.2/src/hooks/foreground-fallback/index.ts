@@ -168,6 +168,11 @@ export class ForegroundFallbackManager {
     return this.cooldowns;
   }
 
+  /** Return the last-observed model for a session ("providerID/modelID"). */
+  getSessionModel(sessionID: string): string | undefined {
+    return this.sessionModel.get(sessionID);
+  }
+
   /**
    * Capture an Anthropic-style cooldown for the model that just hit a rate
    * limit. Idempotent: only records forward-looking reset times. Persists
