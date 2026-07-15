@@ -1,102 +1,72 @@
 # Verify
 
-## Static checks
+## Installation readback
 
-- The install basis is `oh-my-opencode-slim v1.1.2` with `superpowers v5.1.0`.
-- `superpowers` is in your OpenCode plugin list.
-- The patched local OMO Slim path is in your OpenCode plugin list.
-- Prompt bridge files are present at `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.
-- Your OMO Slim config loads the `superpowers-bridge` preset.
-- Your live `~/.config/opencode/oh-my-opencode-slim.jsonc` actually includes the merged contents from `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc`.
-- Your local OMO Slim checkout was built after applying patches: `bun install`, then `bun run build`.
-- `bun run build` cleans `dist/` before emitting new files.
+Use a fresh OpenCode process. Plugin code and discovered skills are not reloaded
+by an already running process.
 
-If the behavior still looks old after patching source, check the config merge first. The most common failure is rebuilding the plugin checkout but forgetting to update `~/.config/opencode/oh-my-opencode-slim.jsonc`.
+Confirm all of the following:
 
-## Agent availability
+- OMO is `v1.1.2` on the supported 1.x line; OMO 2.x is unsupported.
+- The OMO checkout received the v1.1.2 `0001-superpowers-bridge-rollup.patch`
+  and then `0002-auto-continue-agent-model-preservation.patch`.
+- The plugin list starts with the direct local Superpowers Lite plugin, followed
+  by the local OMO plugin.
+- `superpowersSkillsDir` points to the same local Lite checkout's `skills`
+  directory.
+- No upstream Superpowers Git plugin, stock path, junction, alias, second Lite
+  clone, or automatic fallback is configured.
+- `bun install` and `bun run build` completed in the patched OMO checkout.
+- Prompt bridges are loaded from
+  `<OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge/`: the
+  `orchestrator` append identifies the `main-session controller`, states that
+  one capable agent is the default, and makes multi-perspective and Best-of-N
+  use conditional rather than default-on. It also requires consulting a directly
+  matching skill before substantial work while allowing relevant guidance to be
+  adapted instead of followed step by step. The `fixer` append includes
+  `Superpowers implementer worker`.
 
-Confirm these agents are available: `orchestrator`, `orchestrator-beta`, `orchestrator-delta`, `fixer`, `oracle`, `explorer`, `librarian`, `designer`, `observer`, and `council`.
-
-`councillor` is internal-only for the council flow and does not require a separate published prompt bridge.
-
-## Skill checks
-
-Expected behavior:
-
-- `@fixer` can access `test-driven-development`, `systematic-debugging`, and `verification-before-completion`.
-- `@oracle` can access `systematic-debugging` only among the listed Superpowers review/debug skills.
-- `@orchestrator`, `@orchestrator-beta`, and `@orchestrator-delta` can access reserved orchestrator-only skills.
-- Non-root agents such as `@fixer`, `@oracle`, and `@wildcard` cannot access reserved orchestrator-only skills.
-
-Concrete probes:
+Run the prompt contract against both the tracked source and installed bridge:
 
 ```text
-@fixer use verification-before-completion and tell me what must be checked before claiming done
-@fixer use writing-plans to draft a plan for this repo
-@oracle use systematic-debugging to investigate a suspected bug
-@oracle use subagent-driven-development to delegate implementation
+node tests/prompt-bridge-contract.mjs prompt-bridges/orchestrator_append.md <OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge/orchestrator_append.md
 ```
 
-## MCP checks
-
-- Operator-class agents can still access allowed custom MCPs.
-- Non-operator agents cannot access restricted MCPs (`windows-mcp`, `chrome-devtools`, `playwright`).
-- OMO-managed MCP restrictions do not affect user custom MCPs.
-
-## Orchestrator pivot checks
-
-Final behavior:
-
-- literal `orchestrator` is the only automatic pivot source
-- `orchestrator-beta` is the only automatic pivot target and fallback-enforcing root
-- `orchestrator-delta` is manual-only and does not force child fallback
-
-Unit/static check in the patched OMO Slim checkout:
-
-```bash
-bun test src/utils/orchestrator-identity.test.ts   src/config/orchestrator-only-skills.test.ts   src/hooks/foreground-fallback/index.test.ts   src/index.test.ts   src/utils/session.test.ts
-```
-
-Runtime probes:
+For the complete local instruction stack, also confirm that global topology
+memory and the consultation skill do not override the bridge back to default-on
+fan-out:
 
 ```text
-# Probe 1: literal orchestrator retry pivots root
-@orchestrator -> hit a real retryable Anthropic quota/overload event
-# Expected: replay uses @orchestrator-beta on gauge-forge-openai/gpt-5.4
-
-# Probe 2: beta active -> child preroute fires
-@orchestrator-beta -> dispatch @librarian short task
-# Expected: spawned as @librarian__task_fallback when librarian is Anthropic-primary with a backup model
-
-# Probe 3: resumed Claude child blocked in beta mode
-@orchestrator-beta -> dispatch @librarian with task_id pointing at a previous opus-shaped librarian session
-# Expected: tool error instructs a fresh task without task_id
-
-# Probe 4: delta is manual-only
-@orchestrator-delta -> dispatch @librarian short task
-# Expected: no forced rewrite solely because the root is delta
+node tests/lite-active-policy-contract.mjs <OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge/orchestrator_append.md <OPENCODE_CONFIG_DIR>/memory/50-subagent-topology-and-delegation.md <OPENCODE_CONFIG_DIR>/skills/multi-perspective-consultation/SKILL.md
 ```
 
-## Build cleanliness check
+If the configured Lite directory is unavailable, OMO should warn and disable the
+bridge overlay. It must not discover a stock Superpowers catalog.
 
-```bash
-bun test scripts/build-cleanliness.test.ts
-```
+## Skill and agent checks
 
-Expected: the test creates a stale declaration for a removed hook, runs `bun run build`, and confirms the stale declaration is gone.
+In the fresh process, confirm that Lite skills are available from the configured
+local checkout and that `using-superpowers` remains bootstrap-only. Confirm these
+agents are available: `orchestrator`, `orchestrator-beta`, `orchestrator-delta`,
+`fixer`, `oracle`, `explorer`, `librarian`, `designer`, `observer`, and `council`.
 
-## Optional Best-of-N checks
+Check the established policy:
 
-Only run these if you installed the optional `opencode-config/` example setup:
+- `@fixer` can use `test-driven-development`, `systematic-debugging`, and
+  `verification-before-completion`.
+- `@oracle` can use `systematic-debugging` among the listed Lite review/debug
+  skills.
+- Root orchestrators can use reserved root-only skills; non-root agents cannot.
 
-- Dispatch all variant agents through the task tool.
-- Dispatch utility agents `scout`, `validator`, `gist`, and `wildcard`.
-- Confirm variants inherit base Superpowers policy.
-- Load `best-of-n-with-judge` from a root orchestrator without starting a fan-out.
+## Auto-continue readback
 
-Concrete optional probes:
+Start an `orchestrator-beta` or `orchestrator-delta` session with a temporary
+model override, leave one local todo pending, and allow auto-continue to resume.
+The resumed session must retain both the active orchestrator variant and selected
+model.
 
-```text
-@orchestrator-delta use best-of-n-with-judge and summarize the phases without starting a fan-out
-@fixer use best-of-n-with-judge
-```
+## Consumer scope
+
+Lite supports Claude Code, Cursor, Copilot CLI, Codex CLI/App, Kimi, OpenCode,
+Pi, Antigravity, and Factory-compatible consumers. Gemini is end-of-life and
+unsupported.

@@ -1,0 +1,679 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "preset": {
+      "type": "string"
+    },
+    "setDefaultAgent": {
+      "type": "boolean"
+    },
+    "scoringEngineVersion": {
+      "type": "string",
+      "enum": [
+        "v1",
+        "v2-shadow",
+        "v2"
+      ]
+    },
+    "balanceProviderUsage": {
+      "type": "boolean"
+    },
+    "showStartupToast": {
+      "description": "Show the startup activation toast when OpenCode starts. Defaults to true.",
+      "type": "boolean"
+    },
+    "superpowersSkillsDir": {
+      "description": "Absolute path to the active Superpowers Lite skills directory. When omitted, the Superpowers bridge overlay is disabled.",
+      "type": "string",
+      "minLength": 1
+    },
+    "manualPlan": {
+      "type": "object",
+      "properties": {
+        "orchestrator": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        },
+        "oracle": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        },
+        "designer": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        },
+        "explorer": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        },
+        "librarian": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        },
+        "fixer": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback1": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback2": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            },
+            "fallback3": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^\\s]+$"
+            }
+          },
+          "required": [
+            "primary",
+            "fallback1",
+            "fallback2",
+            "fallback3"
+          ]
+        }
+      },
+      "required": [
+        "orchestrator",
+        "oracle",
+        "designer",
+        "explorer",
+        "librarian",
+        "fixer"
+      ],
+      "additionalProperties": false
+    },
+    "presets": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "model": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "variant": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            },
+            "variant": {
+              "type": "string"
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mcps": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "prompt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "orchestratorPrompt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "options": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "variant": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "variant": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mcps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "orchestratorPrompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "options": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "disabled_agents": {
+      "description": "Agent names to disable completely. Disabled agents are not instantiated and cannot be delegated to. Orchestrator and council internal agents (councillor) cannot be disabled. By default, 'observer' is disabled. Remove it from this list and configure a vision-capable model to enable.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "disabled_mcps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "multiplexer": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "none",
+          "type": "string",
+          "enum": [
+            "auto",
+            "tmux",
+            "zellij",
+            "none"
+          ]
+        },
+        "layout": {
+          "default": "main-vertical",
+          "type": "string",
+          "enum": [
+            "main-horizontal",
+            "main-vertical",
+            "tiled",
+            "even-horizontal",
+            "even-vertical"
+          ]
+        },
+        "main_pane_size": {
+          "default": 60,
+          "type": "number",
+          "minimum": 20,
+          "maximum": 80
+        }
+      }
+    },
+    "tmux": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "layout": {
+          "default": "main-vertical",
+          "type": "string",
+          "enum": [
+            "main-horizontal",
+            "main-vertical",
+            "tiled",
+            "even-horizontal",
+            "even-vertical"
+          ]
+        },
+        "main_pane_size": {
+          "default": 60,
+          "type": "number",
+          "minimum": 20,
+          "maximum": 80
+        }
+      }
+    },
+    "websearch": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "default": "exa",
+          "type": "string",
+          "enum": [
+            "exa",
+            "tavily"
+          ]
+        }
+      }
+    },
+    "interview": {
+      "type": "object",
+      "properties": {
+        "maxQuestions": {
+          "default": 2,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "outputFolder": {
+          "default": "interview",
+          "type": "string",
+          "minLength": 1
+        },
+        "autoOpenBrowser": {
+          "default": true,
+          "description": "Automatically open the interview UI in your default browser during interactive runs. Disabled automatically in tests and CI.",
+          "type": "boolean"
+        },
+        "port": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "dashboard": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "todoContinuation": {
+      "type": "object",
+      "properties": {
+        "maxContinuations": {
+          "default": 5,
+          "description": "Maximum consecutive auto-continuations before stopping to ask user",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cooldownMs": {
+          "default": 3000,
+          "description": "Delay in ms before auto-continuing (gives user time to abort)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30000
+        },
+        "autoEnable": {
+          "default": false,
+          "description": "Automatically enable auto-continue when the orchestrator session has enough todos",
+          "type": "boolean"
+        },
+        "autoEnableThreshold": {
+          "default": 4,
+          "description": "Number of todos that triggers auto-enable (only used when autoEnable is true)",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    },
+    "subtask": {
+      "type": "object",
+      "properties": {
+        "timeoutMs": {
+          "description": "Subtask worker timeout in ms. 0 disables the timeout. Defaults to 300000 (5 minutes).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "timeoutMs": {
+          "default": 15000,
+          "type": "number",
+          "minimum": 0
+        },
+        "retryDelayMs": {
+          "default": 500,
+          "type": "number",
+          "minimum": 0
+        },
+        "chains": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "orchestrator": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "oracle": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "designer": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "explorer": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "librarian": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "fixer": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "retry_on_empty": {
+          "default": true,
+          "description": "When true (default), empty provider responses are treated as failures, triggering fallback/retry. Set to false to treat them as successes.",
+          "type": "boolean"
+        }
+      }
+    },
+    "council": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          }
+        },
+        "timeout": {
+          "default": 180000,
+          "type": "number",
+          "minimum": 0
+        },
+        "default_preset": {
+          "default": "default",
+          "type": "string"
+        },
+        "councillor_execution_mode": {
+          "default": "parallel",
+          "description": "Execution mode for councillors. \"serial\" runs them one at a time (required for single-model systems). \"parallel\" runs them concurrently (default, faster for multi-model systems).",
+          "type": "string",
+          "enum": [
+            "parallel",
+            "serial"
+          ]
+        },
+        "councillor_retries": {
+          "default": 3,
+          "description": "Number of retry attempts for councillors that return empty responses (e.g. due to provider rate limiting). Default: 3 retries.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "master": {
+          "description": "DEPRECATED — ignored. Council agent synthesizes directly."
+        },
+        "master_timeout": {
+          "description": "DEPRECATED — ignored. Use \"timeout\" instead."
+        },
+        "master_fallback": {
+          "description": "DEPRECATED — ignored. No separate master session."
+        }
+      },
+      "required": [
+        "presets"
+      ]
+    }
+  },
+  "title": "oh-my-opencode-slim",
+  "description": "Configuration schema for oh-my-opencode-slim plugin for OpenCode"
+}

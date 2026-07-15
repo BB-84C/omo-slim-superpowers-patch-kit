@@ -3,6 +3,7 @@
   "preset": "superpowers-bridge",
   "disabled_agents": [],
   "showStartupToast": false,
+  "superpowersSkillsDir": "<LOCAL_SUPERPOWERS_LITE_PATH>/skills",
   "presets": {
     "superpowers-bridge": {
       "orchestrator": {

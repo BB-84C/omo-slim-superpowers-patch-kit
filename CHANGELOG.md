@@ -1,5 +1,46 @@
 # Changelog
 
+## Unreleased
+
+- Updated the Lite controller contract so directly matching skills are consulted
+  before substantial work without forcing exact step-by-step execution. The
+  controller begins with one primary workflow skill and adds another only at a
+  real phase or risk transition.
+- Replaced the orchestrator bridge's fixed Superpowers pipeline and default-on
+  multi-model fan-out with the Superpowers Lite contract: one capable agent by
+  default, risk-proportional stages and review, opt-in multi-perspective and
+  Best-of-N execution, and outcome-first user communication.
+- Added a prompt contract test that rejects the retired pressure language and
+  can verify both the tracked bridge and an installed live copy.
+- Added an active-policy contract check for global topology memory and the
+  multi-perspective consultation skill, preventing another prompt layer from
+  silently restoring default-on fan-out after the OMO bridge is corrected.
+
+## 2026-07-12 - local Superpowers Lite cutover release surface
+
+### Changed
+- Regenerated the v1.1.2 bridge rollup directly from upstream commit
+  `89f7a4025f2547584aa91c674fc508593a668006` to verified target
+  `17666e36b3064b3dce49ace3c96652a3e43269d7`, including the explicit
+  `superpowersSkillsDir` configuration field.
+- The supported runtime source is now one direct local Superpowers Lite development
+  checkout. It has no commit pin, second clone, junction, alias, stock path, or
+  automatic upstream-Superpowers fallback.
+- Fresh installs apply the regenerated `0001-superpowers-bridge-rollup.patch`
+  first, then preserve the separate
+  `0002-auto-continue-agent-model-preservation.patch`.
+- Updated templates, install guidance, verification guidance, and the partial
+  v1.1.2 snapshot anchors for the local Lite path.
+- Restored the required copy of all eight prompt-bridge append files before
+  fresh-process validation; they are not embedded in the rollup.
+
+### Compatibility
+- OMO support remains v1.1.2 on the 1.x line only; OMO 2.x is unsupported.
+- Local Lite changes become visible only after a fresh OpenCode process starts.
+- Lite supports Claude Code, Cursor, Copilot CLI, Codex CLI/App, Kimi, OpenCode,
+  Pi, Antigravity, and Factory-compatible consumers. Gemini is end-of-life and
+  unsupported.
+
 ## 2026-07-08 — auto-continue variant agent + model preservation fix
 
 ### Fixed
@@ -14,7 +55,9 @@
 
 ## v1.1.2 release (2026-06-13)
 
-Refreshed onto upstream `oh-my-opencode-slim v1.1.2` (validated basis = `oh-my-opencode-slim v1.1.2` + `superpowers v5.1.0`). All prior bridge semantics preserved.
+Refreshed onto upstream `oh-my-opencode-slim v1.1.2`. The original Superpowers
+version statement below is historical; current installation guidance uses a
+direct local Superpowers Lite checkout without a pin.
 
 ### Added
 - New rollup `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch` reapplies the full superpowers bridge onto a clean `v1.1.2` checkout in one step.
@@ -39,7 +82,7 @@ Refreshed onto upstream `oh-my-opencode-slim v1.1.2` (validated basis = `oh-my-o
 
 ### Validated basis
 - `oh-my-opencode-slim v1.1.2` (commit `89f7a40`)
-- `superpowers v5.1.0` (unchanged)
+- Historical Superpowers basis at the time of this release: `v5.1.0`
 
 ### Fresh-install simulation
 - Apply-check on clean `v1.1.2` clone: PASS, no whitespace warnings
@@ -50,7 +93,9 @@ Refreshed onto upstream `oh-my-opencode-slim v1.1.2` (validated basis = `oh-my-o
 ## 2026-05-09 — release-basis docs refresh
 
 ### Changed
-- Install-facing documentation now names `oh-my-opencode-slim v1.0.7` and `superpowers v5.1.0` as the current validated basis instead of the previous release pair.
+- Historical documentation named `oh-my-opencode-slim v1.0.7` and a pinned
+  Superpowers version as the current basis. This was superseded by the v1.1.2
+  local Lite installation path.
 
 ## 2026-05-08 — docs follow-up
 

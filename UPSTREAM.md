@@ -1,17 +1,27 @@
 # Upstream notice
 
-This repository is a third-party patch kit.
-
-It redistributes selected modified source snapshots and patch files against `oh-my-opencode-slim`.
+This is a third-party patch kit that redistributes selected modified source
+snapshots and patch files for `oh-my-opencode-slim`.
 
 - Upstream project: https://github.com/alvinunreal/oh-my-opencode-slim
-- Upstream version basis: `v1.1.2`
-- Validated Superpowers basis: `v5.1.0`
-- Default fresh-install patch: `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch`
-- Included upstream MIT license copy: [`UPSTREAM-LICENSE-oh-my-opencode-slim.txt`](./UPSTREAM-LICENSE-oh-my-opencode-slim.txt)
+- Upstream basis: `v1.1.2` on OMO 1.x only; OMO 2.x is unsupported.
+- Current install sequence:
+  1. `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch`
+  2. `patches/oh-my-opencode-slim/v1.1.2/0002-auto-continue-agent-model-preservation.patch`
+- Included upstream MIT license: [`UPSTREAM-LICENSE-oh-my-opencode-slim.txt`](./UPSTREAM-LICENSE-oh-my-opencode-slim.txt)
 
-The older top-level `0001`–`0007` patch chain is retained as legacy/historical provenance for the integration sequence. Fresh installs should use the versioned `v1.1.2` rollup patch instead of replaying that legacy chain; the `v1.0.7` rollup is the previous release.
+The Superpowers runtime is a direct local Superpowers Lite development checkout,
+not an upstream Git installation or an automatic discovery target. The local
+checkout is intentionally unpinned and needs no second clone, junction, alias,
+or stock fallback. Its edits appear after a fresh OpenCode process starts.
 
-Users should review the upstream project's licensing terms and notices before reusing, redistributing, or republishing any upstream-derived material included here. For redistribution clarity, this repository includes a verbatim copy of the upstream MIT license text from the validated upstream checkout.
+Lite supports Claude Code, Cursor, Copilot CLI, Codex CLI/App, Kimi, OpenCode,
+Pi, Antigravity, and Factory-compatible consumers. Gemini is end-of-life and
+unsupported.
 
-This repository does not claim affiliation with, endorsement from, or maintenance authority over the upstream maintainer or project.
+The older top-level `0001`-`0007` patch chain and v1.0.7 rollup are retained as
+historical provenance, not current install instructions.
+
+Users should review the upstream licensing terms before reusing or redistributing
+upstream-derived material. This repository does not claim affiliation with or
+maintenance authority over the upstream project.

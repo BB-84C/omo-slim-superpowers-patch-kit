@@ -1,5 +1,9 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { getSkillPermissionsForAgent } from '../cli/skills';
+import { clearSuperpowersSkillDiscoveryCache } from '../cli/superpowers-policy';
 import type { PluginConfig } from '../config';
 import {
   AgentOverrideConfigSchema,
@@ -23,6 +27,35 @@ const TASK_FALLBACKS_FIXTURE = {
     shadowAgentName: 'librarian__task_fallback',
   },
 };
+
+const SUPERPOWERS_TEST_SKILLS = [
+  'brainstorming',
+  'receiving-code-review',
+  'requesting-code-review',
+  'subagent-driven-development',
+  'systematic-debugging',
+  'test-driven-development',
+  'using-superpowers',
+  'verification-before-completion',
+  'writing-plans',
+];
+
+let skillsRoot: string;
+
+beforeEach(() => {
+  skillsRoot = mkdtempSync(join(tmpdir(), 'omo-lite-policy-'));
+  for (const name of SUPERPOWERS_TEST_SKILLS) {
+    const dir = join(skillsRoot, name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'SKILL.md'), `---\nname: ${name}\n---\n`);
+  }
+  clearSuperpowersSkillDiscoveryCache();
+});
+
+afterEach(() => {
+  rmSync(skillsRoot, { recursive: true, force: true });
+  clearSuperpowersSkillDiscoveryCache();
+});
 
 describe('agent alias backward compatibility', () => {
   test("applies 'explore' config to 'explorer' agent", () => {
@@ -347,7 +380,7 @@ describe('skill permissions', () => {
   });
 
   test('oracle does not get requesting-code-review skill allowed by default', () => {
-    const agents = createAgents();
+    const agents = createAgents({ superpowersSkillsDir: skillsRoot });
     const oracle = agents.find((a) => a.name === 'oracle');
     expect(oracle).toBeDefined();
     const skillPerm = (oracle?.config.permission as Record<string, unknown>)
@@ -373,13 +406,55 @@ describe('skill permissions', () => {
     expect(skillPerm?.simplify).not.toBe('allow');
   });
 
+  test('threads the configured catalog to orchestrator variants and constrained workers', () => {
+    const agents = createAgents({
+      superpowersSkillsDir: skillsRoot,
+      agents: {
+        'orchestrator-beta': { model: 'test/orchestrator-beta' },
+        'orchestrator-delta': { model: 'test/orchestrator-delta' },
+      },
+    });
+
+    for (const name of [
+      'orchestrator',
+      'orchestrator-beta',
+      'orchestrator-delta',
+    ]) {
+      const skillPerm = (
+        agents.find((agent) => agent.name === name)?.config
+          .permission as Record<string, unknown>
+      )?.skill as Record<string, string>;
+      expect(skillPerm.brainstorming).toBe('allow');
+      expect(skillPerm['writing-plans']).toBe('allow');
+      expect(skillPerm['using-superpowers']).toBe('deny');
+    }
+
+    for (const name of ['fixer', 'designer']) {
+      const skillPerm = (
+        agents.find((agent) => agent.name === name)?.config
+          .permission as Record<string, unknown>
+      )?.skill as Record<string, string>;
+      expect(skillPerm['test-driven-development']).toBe('allow');
+      expect(skillPerm.brainstorming).toBe('deny');
+      expect(skillPerm['using-superpowers']).toBe('deny');
+    }
+  });
+
   test('fixer-alpha has simplify (variant inherits at skill-resolution layer)', () => {
-    const skillPerm = getSkillPermissionsForAgent('fixer-alpha');
+    const skillPerm = getSkillPermissionsForAgent(
+      'fixer-alpha',
+      undefined,
+      skillsRoot,
+    );
     expect(skillPerm.simplify).toBe('allow');
   });
 
   test('oracle-alpha does NOT have simplify (variant inherits at skill-resolution layer)', () => {
-    const skillPerm = getSkillPermissionsForAgent('oracle-alpha');
+    const skillPerm = getSkillPermissionsForAgent(
+      'oracle-alpha',
+      undefined,
+      skillsRoot,
+    );
     expect(skillPerm.simplify).not.toBe('allow');
   });
 });
@@ -1184,7 +1259,6 @@ describe('subagent pivot via root agent identity (orchestrator-beta)', () => {
     expect(verdict.action).toBe('passthrough');
   });
 
-
   test('passes through anthropic-primary subagent when root agent is orchestrator-delta', async () => {
     const verdict = await decideTaskPreroute({
       rootAgent: 'orchestrator-delta',
@@ -1243,7 +1317,6 @@ describe('subagent pivot via root agent identity (orchestrator-beta)', () => {
     });
     expect(verdict.action).toBe('passthrough');
   });
-
 
   test('passes through resumed anthropic-primary child when root agent is orchestrator-delta', async () => {
     const verdict = await decideTaskPreroute({

@@ -1,73 +1,40 @@
 # Install
 
-> [!IMPORTANT]
-> **Do not stop after patching/building the local `oh-my-opencode-slim` checkout.**
-> The runtime behavior in OpenCode comes from your live OMO Slim config too, so you must merge `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc`.
-> If you skip that merge, OpenCode can keep running your old preset even though the patched plugin source built successfully.
+## Supported setup
 
-## Prerequisites
+Use a direct local Superpowers Lite development checkout as the runtime source.
+Keep that one checkout editable; do not pin it, create a second Lite clone, add a
+junction or alias, or install upstream Superpowers as a fallback. OMO reads the
+configured Lite skills directory only. An absent or invalid directory disables
+the bridge overlay; it does not discover stock Superpowers.
 
-- OpenCode is already installed.
-- `superpowers` is installed or can be installed.
-- `oh-my-opencode-slim` is available locally or can be cloned locally.
-- This patch-kit repo has been cloned or downloaded locally.
-- Validated basis: `oh-my-opencode-slim v1.1.2` and `superpowers v5.1.0`.
+This kit supports `oh-my-opencode-slim v1.1.2` on the OMO 1.x line only. OMO 2.x
+is unsupported.
 
-Back up your current `opencode.json` and `oh-my-opencode-slim.jsonc` before merging templates.
+## 1. Prepare local paths
 
-## Step 1: clone or download this patch-kit
+Keep local paths private to your machine. In the examples below, replace:
 
-Fresh installs start with a local copy of this repository. Clone it, or download and extract the ZIP, before using any `/absolute/path/to/omo-slim-superpowers-patch-kit/...` examples below.
+- `<LOCAL_SUPERPOWERS_LITE_PATH>` with the root of your direct Lite development
+  checkout.
+- `<LOCAL_OMO_SLIM_PATH>` with the patched OMO checkout.
+- `<PATCH_KIT_PATH>` with this patch-kit checkout.
 
-```bash
-git clone https://github.com/BB-84C/omo-slim-superpowers-patch-kit.git
-cd omo-slim-superpowers-patch-kit
+The Lite plugin path is:
+
+```text
+<LOCAL_SUPERPOWERS_LITE_PATH>/.opencode/plugins/superpowers.js
 ```
 
-In the commands below, replace `/absolute/path/to/omo-slim-superpowers-patch-kit` with the absolute path to that local patch-kit checkout or extracted directory.
+The Lite skills directory is:
 
-## Critical note before you start
+```text
+<LOCAL_SUPERPOWERS_LITE_PATH>/skills
+```
 
-### TL;DR
+## 2. Build the OMO checkout
 
-You need **both** of these:
-
-1. a patched-and-built local `oh-my-opencode-slim` source checkout;
-2. a merged live runtime config at `~/.config/opencode/oh-my-opencode-slim.jsonc`.
-
-If either half is missing, the install is incomplete.
-
-Patching the local `oh-my-opencode-slim` source tree does **not** automatically update the OMO Slim preset that OpenCode loads at runtime.
-
-You must merge:
-
-- `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc`
-
-into:
-
-- `~/.config/opencode/oh-my-opencode-slim.jsonc`
-
-If you do not do this, OpenCode may still be running your previous preset even though the patched plugin source builds successfully.
-
-## Agentic install workflow
-
-Ask your OpenCode agent to:
-
-1. clone or download this patch-kit repo locally
-2. locate or clone a local editable checkout of `oh-my-opencode-slim`
-3. check out upstream tag `v1.1.2`
-4. apply the default fresh-install rollup patch: `patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch`
-5. run `bun install`
-6. run `bun run build`
-7. point OpenCode at that local checkout only after the build succeeds
-8. copy `prompt-bridges/` into `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`
-9. merge config templates — especially `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc` — without overwriting existing MCPs
-10. restart OpenCode
-11. verify with `docs/verify.md`
-
-## Manual install workflow
-
-Start from the local patch-kit checkout or extracted ZIP created in Step 1. Then clone the upstream OMO Slim source separately:
+Clone upstream OMO and select the supported tag:
 
 ```bash
 git clone https://github.com/alvinunreal/oh-my-opencode-slim.git
@@ -75,70 +42,72 @@ cd oh-my-opencode-slim
 git checkout v1.1.2
 ```
 
-Apply the default `v1.1.2` rollup patch and the auto-continue fix:
+Apply the published patches in this exact order:
 
 ```bash
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
-git apply /absolute/path/to/omo-slim-superpowers-patch-kit/patches/oh-my-opencode-slim/v1.1.2/0002-auto-continue-agent-model-preservation.patch
-```
-
-Do not also apply the old top-level `0001`–`0007` patch chain. That split sequence is retained as legacy/historical material for review and archaeology, not as the default fresh-install path. Previous release: the `v1.0.7` rollup remains available at `patches/oh-my-opencode-slim/v1.0.7/0001-superpowers-bridge-rollup.patch` for historical installs only; it is not the default path.
-
-The rollup is not a pure additive overlay on every upstream v1.1.2 surface. It
-matches the validated slim target, which intentionally omits upstream-only
-surfaces that were not carried forward for this release path: divoom, tui,
-doctor CLI, and task-session-manager. It keeps upstream's auto-update hardening,
-session-goal command, subtask worker sessions, and clonedeps skill. Fresh
-installs should not add a missing TUI plugin to `tui.json`; configure only the
-patched plugin entry in `opencode.json`.
-
-Install and build:
-
-```bash
+git apply <PATCH_KIT_PATH>/patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
+git apply <PATCH_KIT_PATH>/patches/oh-my-opencode-slim/v1.1.2/0002-auto-continue-agent-model-preservation.patch
 bun install
 bun run build
 ```
 
-The rollup includes the legacy patch-0007 build cleanup, so `bun run build` cleans `dist/` first.
+Do not apply the historical top-level `0001`-`0007` chain in addition to this
+pair. The v1.1.2 snapshot is a partial comparison aid, not a runnable checkout.
 
-Legacy note: in the old split patch chain, patch 0003 was safe even if you did not copy the optional best-of-N example setup; it only generalized policy resolution and added utility policy entries. Fresh installs should use the rollup patch instead of replaying that chain.
+## 3. Merge configuration
 
-Then:
+Back up your existing OpenCode configuration. Merge, rather than replace,
+`config-templates/opencode.plugin-snippet.jsonc` into `opencode.json` and
+`config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into your OMO
+configuration.
 
-1. Copy `prompt-bridges/*.md` to `~/.config/opencode/oh-my-opencode-slim/superpowers-bridge/`.
-2. Merge `config-templates/oh-my-opencode-slim.superpowers-bridge.jsonc` into `~/.config/opencode/oh-my-opencode-slim.jsonc`.
-   - This is the step that actually switches your runtime OMO Slim preset/config to the published worker layout.
-   - If you only patch source and skip this merge, your old preset can stay active.
-3. Merge `config-templates/opencode.plugin-snippet.jsonc` into `opencode.json`, replacing `<LOCAL_OMO_SLIM_PATH>` with the patched checkout path.
-4. Restart OpenCode.
-5. Follow `docs/verify.md`.
+Replace both placeholders in the plugin template. Its plugin list must contain
+only the local Lite plugin followed by the local OMO plugin. Set the top-level
+`superpowersSkillsDir` field to the Lite `skills` directory. Preserve unrelated
+plugins, MCPs, providers, models, and agent settings.
 
-## Important merge rule
+No upstream Superpowers Git specification, stock path, junction, or compatibility
+alias is part of this setup.
 
-Do not replace your existing MCP block wholesale. Preserve your own MCPs and other plugins.
+## 4. Install prompt bridges
 
-## Optional best-of-N setup
+The rollup does not embed the prompt bridges. Before fresh-process validation,
+copy all eight `prompt-bridges/*_append.md` files into:
 
-Copy optional example files if you want the maintainer's best-of-N setup:
-
-```bash
-cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/agents/* ~/.config/opencode/agents/
-cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/prompts/* ~/.config/opencode/prompts/
-cp -r /absolute/path/to/omo-slim-superpowers-patch-kit/opencode-config/skills/best-of-n-with-judge ~/.config/opencode/skills/
+```text
+<OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge/
 ```
 
-On Windows, use `Copy-Item -Recurse` with equivalent paths.
+The required files are `council_append.md`, `designer_append.md`,
+`explorer_append.md`, `fixer_append.md`, `librarian_append.md`,
+`observer_append.md`, `oracle_append.md`, and `orchestrator_append.md`.
 
-## Root orchestrators
+Windows PowerShell:
 
-The final template includes:
+```powershell
+$kit = "<PATCH_KIT_PATH>"
+$configRoot = "<OPENCODE_CONFIG_DIR>"
+$destination = Join-Path $configRoot "oh-my-opencode-slim\superpowers-bridge"
+New-Item -ItemType Directory -Force -Path $destination | Out-Null
+Copy-Item -Path (Join-Path $kit "prompt-bridges\*_append.md") -Destination $destination -Force
+```
 
-- `orchestrator`: Anthropic-primary root and only automatic pivot source.
-- `orchestrator-beta`: automatic GPT fallback target and only fallback-enforcing root.
-- `orchestrator-delta`: manual GPT root with no child fallback enforcement.
+POSIX shell:
 
-Future model swaps are config-only: edit `~/.config/opencode/oh-my-opencode-slim.jsonc`, save, rebuild only if source patches changed, and restart OpenCode.
+```bash
+mkdir -p "<OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge"
+cp "<PATCH_KIT_PATH>/prompt-bridges/"*_append.md \
+  "<OPENCODE_CONFIG_DIR>/oh-my-opencode-slim/superpowers-bridge/"
+```
 
-## If your version differs
+## 5. Start fresh and verify
 
-If patch application fails, compare the affected files against `snapshots/` and port the changes manually.
+Start a fresh OpenCode process after changing the local Lite checkout, OMO source,
+or either configuration file. Existing processes retain the plugin code they
+already loaded. Follow [`verify.md`](./verify.md) for semantic readback.
+
+## Lite consumer scope
+
+Superpowers Lite supports Claude Code, Cursor, Copilot CLI, Codex CLI/App, Kimi,
+OpenCode, Pi, Antigravity, and Factory-compatible consumers. Gemini is
+end-of-life and unsupported.

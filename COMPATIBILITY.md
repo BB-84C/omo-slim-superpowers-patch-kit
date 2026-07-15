@@ -1,47 +1,38 @@
 # Compatibility
 
-## Validated versions
+## Validated OMO basis
 
-This patch kit is currently validated against:
+This kit supports `oh-my-opencode-slim v1.1.2` on the OMO 1.x line only. OMO 2.x
+is unsupported.
 
-- `superpowers v5.1.0`
-- `oh-my-opencode-slim v1.1.2`
-
-Default fresh installs should apply the versioned rollup patch:
+Start from upstream v1.1.2 and apply these patches in order:
 
 ```text
 patches/oh-my-opencode-slim/v1.1.2/0001-superpowers-bridge-rollup.patch
+patches/oh-my-opencode-slim/v1.1.2/0002-auto-continue-agent-model-preservation.patch
 ```
 
-The older top-level `0001`–`0007` patch files are legacy/historical breakdowns of the same integration work. They are useful for reviewing provenance, but they are not the default path for a new `v1.1.2` install and should not be applied on top of the rollup. The `v1.0.7` rollup is the previous release.
+The top-level `0001`-`0007` files and the v1.0.7 rollup are historical reference
+material, not the current installation path.
 
-## Expectations for nearby versions
+## Superpowers Lite runtime
 
-Nearby versions outside this validated pair are unvalidated; if patch hunks fail or runtime behavior differs, compare the target files against the paths listed below and your own local reference copies before proceeding.
+Use one direct local Superpowers Lite development checkout. It is the supported
+runtime source; no commit pin, second clone, junction, alias, stock path, or
+automatic upstream fallback is needed. Configure OMO's top-level
+`superpowersSkillsDir` to that checkout's `skills` directory. If the path is
+absent or unreadable, OMO disables the overlay instead of discovering upstream
+Superpowers.
 
-If your local versions are significantly older, upgrade first.
+Lite supports Claude Code, Cursor, Copilot CLI, Codex CLI/App, Kimi, OpenCode,
+Pi, Antigravity, and Factory-compatible consumers. Gemini is end-of-life and
+unsupported.
 
-## What to check when versions differ
+Local Lite edits take effect after a fresh OpenCode process starts; an already
+running process does not reload plugins automatically.
 
-Auto-continue variant recognition is new in this kit's v1.1.2 release.
+## Nearby versions
 
-
-The file list below uses the legacy split-patch numbers as historical pointers to where each behavior came from. For a fresh install on the validated `v1.1.2` basis, use the rollup patch above; the `v1.0.7` basis is the previous release.
-
-- `src/cli/skills.ts` (touched by patches 0001 and 0003)
-- `src/cli/superpowers-policy.ts` (introduced by 0001, modified by 0003 and 0004)
-- `src/cli/superpowers-policy.test.ts` (introduced by 0001, extended by 0004)
-- `src/config/agent-mcps.ts` (touched by patch 0002)
-- `src/index.ts` (touched by patches 0002, 0004, and 0005)
-- `src/agents/index.ts` (touched by patch 0004 — `applyClassification` mode='primary' check)
-- `src/hooks/foreground-fallback/index.ts` (touched by patch 0005)
-- `src/hooks/foreground-fallback/cooldowns.ts` (introduced by patch 0005)
-- `src/hooks/foreground-fallback/cooldowns.test.ts` (introduced by patch 0005)
-- `src/hooks/foreground-fallback/index.test.ts` (extended by patch 0005)
-- prompt bridge loading behavior
-- OMO-built-in MCP names
-- Superpowers skill inventory
-- For patch 0003 specifically: presence of `getCustomAgentNames()` discovery path + `buildCustomAgentDefinition()` in `src/agents/index.ts` (these are how custom agents — including the best-of-N variants — get registered; if upstream changes the discovery mechanism, patch 0003's policy resolution still applies but the custom agent registration may need adjustment)
-- For patch 0004 specifically: presence of literal `agentName === 'orchestrator'` checks in `src/index.ts` (post-file-tool nudge hook around line 229, chat.system.transform hook around line 679) and in `src/agents/index.ts` `applyClassification` (mode='primary' branch). If upstream renames or restructures these sites, the patch will need re-targeting but the underlying generalization is straightforward (`isOrchestratorAgent(name)` instead of `name === 'orchestrator'`).
-- For patch 0005 specifically (Anthropic cooldown tracking): adds two new files (`src/hooks/foreground-fallback/cooldowns.ts` and `cooldowns.test.ts`) and modifies `src/hooks/foreground-fallback/index.ts` (constructor signature gains an optional `cooldowns` 4th argument; new private `captureCooldown()` helper; chain selection in `tryFallback()` uses cooldown-aware filter) and `src/index.ts` (the `effectiveArrays` startup loop reads from `foregroundFallback.getCooldownStore()` to skip cooled models). If upstream restructures `ForegroundFallbackManager.tryFallback` or moves the startup model-selection loop, the patch will need re-targeting; the cooldown helper module itself is upstream-independent.
-- Patch 0005 expects `error.data.responseHeaders` to be available on rate-limit error payloads (per `@opencode-ai/sdk` `ApiError.data.responseHeaders` typing). If a future SDK version drops this field, the cooldown capture becomes a no-op (the rest of the fallback machinery remains functional).
+Other OMO versions are unvalidated. If the patches do not apply, compare the
+affected files against the versioned snapshot before porting the change. The
+snapshot is partial and is not a runnable checkout.

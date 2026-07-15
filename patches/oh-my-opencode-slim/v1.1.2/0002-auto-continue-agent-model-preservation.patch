@@ -15,14 +15,14 @@ index b219c94..87bb5f8 100644
     * Capture an Anthropic-style cooldown for the model that just hit a rate
     * limit. Idempotent: only records forward-looking reset times. Persists
 diff --git a/src/hooks/todo-continuation/index.ts b/src/hooks/todo-continuation/index.ts
-index 54695da..224fa55 100644
+index 54695da..844115b 100644
 --- a/src/hooks/todo-continuation/index.ts
 +++ b/src/hooks/todo-continuation/index.ts
 @@ -6,6 +6,7 @@ import {
    SLIM_INTERNAL_INITIATOR_MARKER,
  } from '../../utils';
  import { isOrchestratorAgent } from '../../utils/orchestrator-identity';
-+import { parseModelReference, type PromptBody } from '../../utils/session';
++import { type PromptBody, parseModelReference } from '../../utils/session';
  import { createTodoHygiene } from './todo-hygiene';
  
  const HOOK_NAME = 'todo-continuation';
@@ -91,7 +91,7 @@ index 54695da..224fa55 100644
          })
          .catch(() => {
            /* best-effort notification */
-@@ -629,11 +649,25 @@ export function createTodoContinuationHook(
+@@ -629,11 +649,23 @@ export function createTodoContinuationHook(
  
          state.isAutoInjecting = true;
          try {
@@ -101,9 +101,7 @@ index 54695da..224fa55 100644
 +          // model overrides survive across continuation prompts.
 +          const agent = config?.getSessionAgent?.(sessionID);
 +          const modelStr = config?.getSessionModel?.(sessionID);
-+          const model = modelStr
-+            ? parseModelReference(modelStr)
-+            : undefined;
++          const model = modelStr ? parseModelReference(modelStr) : undefined;
 +
 +          const body: PromptBody = {
 +            parts: [createInternalAgentTextPart(CONTINUATION_PROMPT)],
@@ -121,10 +119,10 @@ index 54695da..224fa55 100644
            state.consecutiveContinuations++;
            log(`[${HOOK_NAME}] Continuation injected`, {
 diff --git a/src/index.ts b/src/index.ts
-index 1af9c8f..f81be85 100644
+index 09a7712..6e3e564 100644
 --- a/src/index.ts
 +++ b/src/index.ts
-@@ -347,6 +347,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -345,6 +345,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        cooldownMs: config.todoContinuation?.cooldownMs ?? 3000,
        autoEnable: config.todoContinuation?.autoEnable ?? false,
        autoEnableThreshold: config.todoContinuation?.autoEnableThreshold ?? 4,

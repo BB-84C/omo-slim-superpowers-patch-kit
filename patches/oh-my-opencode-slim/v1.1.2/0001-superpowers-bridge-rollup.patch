@@ -19,7 +19,7 @@ index 6814f40..72c665b 100644
      "src/interview": "3920f8d94c932173803d6fdd8506b9b3",
      "src/mcp": "5f5fc5fbb54bf9944063483cee8be88f",
 diff --git a/README.md b/README.md
-index f5f0016..07d12e0 100644
+index f5f0016..f68e926 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,10 +1,6 @@
@@ -80,25 +80,55 @@ index f5f0016..07d12e0 100644
  
  4. **Update the models you want for each agent**
  
-@@ -97,7 +77,7 @@ The default generated configuration includes both `openai` and `opencode-go` pre
-       "oracle": { "model": "openai/gpt-5.5", "variant": "high", "skills": ["simplify"], "mcps": [] },
+@@ -94,25 +74,41 @@ The default generated configuration includes both `openai` and `opencode-go` pre
+   "presets": {
+     "openai": {
+       "orchestrator": { "model": "openai/gpt-5.5", "skills": ["*"], "mcps": ["*", "!context7"] },
+-      "oracle": { "model": "openai/gpt-5.5", "variant": "high", "skills": ["simplify"], "mcps": [] },
++      "oracle": { "model": "openai/gpt-5.5", "variant": "high", "skills": [], "mcps": [] },
        "librarian": { "model": "openai/gpt-5.4-mini", "variant": "low", "skills": [], "mcps": ["websearch", "context7", "grep_app"] },
        "explorer": { "model": "openai/gpt-5.4-mini", "variant": "low", "skills": [], "mcps": [] },
 -      "designer": { "model": "openai/gpt-5.4-mini", "variant": "medium", "skills": [], "mcps": [] },
+-      "fixer": { "model": "openai/gpt-5.4-mini", "variant": "low", "skills": [], "mcps": [] }
 +      "designer": { "model": "openai/gpt-5.4-mini", "variant": "medium", "skills": ["agent-browser"], "mcps": [] },
-       "fixer": { "model": "openai/gpt-5.4-mini", "variant": "low", "skills": [], "mcps": [] }
++      "fixer": { "model": "openai/gpt-5.4-mini", "variant": "low", "skills": ["simplify"], "mcps": [] }
      },
      "opencode-go": {
-@@ -106,7 +86,7 @@ The default generated configuration includes both `openai` and `opencode-go` pre
+       "orchestrator": { "model": "opencode-go/glm-5.1", "skills": [ "*" ], "mcps": [ "*", "!context7" ] },
+-      "oracle": { "model": "opencode-go/deepseek-v4-pro", "variant": "max", "skills": ["simplify"], "mcps": [] },
++      "oracle": { "model": "opencode-go/deepseek-v4-pro", "variant": "max", "skills": [], "mcps": [] },
        "council": { "model": "opencode-go/deepseek-v4-pro", "variant": "high", "skills": [], "mcps": [] },
        "librarian": { "model": "opencode-go/minimax-m2.7", "skills": [], "mcps": [ "websearch", "context7", "grep_app" ] },
        "explorer": { "model": "opencode-go/minimax-m2.7", "skills": [], "mcps": [] },
 -      "designer": { "model": "opencode-go/kimi-k2.6", "variant": "medium", "skills": [], "mcps": [] },
+-      "fixer": { "model": "opencode-go/deepseek-v4-flash", "variant": "high", "skills": [], "mcps": [] }
 +      "designer": { "model": "opencode-go/kimi-k2.6", "variant": "medium", "skills": [ "agent-browser" ], "mcps": [] },
-       "fixer": { "model": "opencode-go/deepseek-v4-flash", "variant": "high", "skills": [], "mcps": [] }
++      "fixer": { "model": "opencode-go/deepseek-v4-flash", "variant": "high", "skills": ["simplify"], "mcps": [] }
      }
    }
-@@ -505,16 +485,10 @@ Use this section as a map: start with installation, then jump to features, confi
+ }
+ ```
+ 
++### Superpowers Lite Skills
++
++To enable the Superpowers Lite bridge overlay, configure its active skills
++directory explicitly:
++
++```jsonc
++{
++  "superpowersSkillsDir": "D:\\superpowers-lite\\skills"
++}
++```
++
++Omitting `superpowersSkillsDir` disables the overlay. If the configured
++directory is unavailable or unreadable, OMO warns and disables the overlay.
++OMO does not probe `~/.config/opencode/superpowers/skills` and does not restore
++a stock fallback roster.
++
+ ### For Alternative Providers
+ 
+ To use custom providers or a mixed-provider setup, use **[Configuration](docs/configuration.md)** for the full reference. If you want a ready-made starting point, check the **[Author's Preset](docs/authors-preset.md)** and **[$30 Preset](docs/thirty-dollars-preset.md)** - the `$30` preset is the best cheap setup.
+@@ -505,16 +501,10 @@ Use this section as a map: start with installation, then jump to features, confi
  |-----|----------------|
  | **[Council](docs/council.md)** | Run multiple models in parallel and synthesize a single answer with `@council` |
  | **[Multiplexer Integration](docs/multiplexer-integration.md)** | Watch agents work live in Tmux or Zellij panes |
@@ -115,7 +145,7 @@ index f5f0016..07d12e0 100644
  
  ### ⚙️ Config & Reference
  
-@@ -522,7 +496,7 @@ Use this section as a map: start with installation, then jump to features, confi
+@@ -522,7 +512,7 @@ Use this section as a map: start with installation, then jump to features, confi
  |-----|----------------|
  | **[Configuration](docs/configuration.md)** | Config file locations, JSONC support, prompt overrides, and full option reference |
  | **[Maintainer Guide](docs/maintainers.md)** | Issue triage rules, label meanings, support routing, and repo maintenance workflow |
@@ -124,7 +154,7 @@ index f5f0016..07d12e0 100644
  | **[MCPs](docs/mcps.md)** | `websearch`, `context7`, `grep_app`, and how MCP permissions work per agent |
  | **[Tools](docs/tools.md)** | Built-in tool capabilities like `webfetch`, LSP tools, code search, and formatters |
  
-@@ -543,7 +517,7 @@ Use this section as a map: start with installation, then jump to features, confi
+@@ -543,7 +533,7 @@ Use this section as a map: start with installation, then jump to features, confi
    <p><sub>Every merged contribution leaves a mark on the realm.</sub></p>
  
    <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
@@ -133,7 +163,7 @@ index f5f0016..07d12e0 100644
  <!-- ALL-CONTRIBUTORS-BADGE:END -->
  </div>
  
-@@ -614,23 +588,6 @@ Use this section as a map: start with installation, then jump to features, confi
+@@ -614,23 +604,6 @@ Use this section as a map: start with installation, then jump to features, confi
        <td align="center" valign="top" width="16.66%"><a href="https://github.com/gustavocaiano"><img src="https://avatars.githubusercontent.com/u/104129313?v=4?s=100" width="100px;" alt="Gustavo Caiano"/><br /><sub><b>Gustavo Caiano</b></sub></a><br /><a href="https://github.com/alvinunreal/oh-my-opencode-slim/commits?author=gustavocaiano" title="Code">💻</a></td>
        <td align="center" valign="top" width="16.66%"><a href="https://github.com/ThomasMldr"><img src="https://avatars.githubusercontent.com/u/6631765?v=4?s=100" width="100px;" alt="Thomas Mulder"/><br /><sub><b>Thomas Mulder</b></sub></a><br /><a href="https://github.com/alvinunreal/oh-my-opencode-slim/commits?author=ThomasMldr" title="Code">💻</a></td>
        <td align="center" valign="top" width="16.66%"><a href="https://github.com/maou-shonen"><img src="https://avatars.githubusercontent.com/u/22576780?v=4?s=100" width="100px;" alt="魔王少年(maou shonen)"/><br /><sub><b>魔王少年(maou shonen)</b></sub></a><br /><a href="https://github.com/alvinunreal/oh-my-opencode-slim/commits?author=maou-shonen" title="Code">💻</a></td>
@@ -787,10 +817,10 @@ index ebc828e..0000000
 -}
 -```
 diff --git a/oh-my-opencode-slim.schema.json b/oh-my-opencode-slim.schema.json
-index a3048fd..3b3361d 100644
+index a3048fd..9324de8 100644
 --- a/oh-my-opencode-slim.schema.json
 +++ b/oh-my-opencode-slim.schema.json
-@@ -19,8 +19,8 @@
+@@ -19,10 +19,15 @@
      "balanceProviderUsage": {
        "type": "boolean"
      },
@@ -800,8 +830,15 @@ index a3048fd..3b3361d 100644
 +      "description": "Show the startup activation toast when OpenCode starts. Defaults to true.",
        "type": "boolean"
      },
++    "superpowersSkillsDir": {
++      "description": "Absolute path to the active Superpowers Lite skills directory. When omitted, the Superpowers bridge overlay is disabled.",
++      "type": "string",
++      "minLength": 1
++    },
      "manualPlan": {
-@@ -486,88 +486,6 @@
+       "type": "object",
+       "properties": {
+@@ -486,88 +491,6 @@
          }
        }
      },
@@ -938,10 +975,10 @@ index 75c8c5f..abe1c73 100644
      "@types/jsdom": "^21.1.7",
 diff --git a/scripts/build-cleanliness.test.ts b/scripts/build-cleanliness.test.ts
 new file mode 100644
-index 0000000..448e369
+index 0000000..a2ba935
 --- /dev/null
 +++ b/scripts/build-cleanliness.test.ts
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,35 @@
 +import { describe, expect, test } from 'bun:test';
 +import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 +import { dirname, join, resolve } from 'node:path';
@@ -968,11 +1005,9 @@ index 0000000..448e369
 +
 +    if (build.exitCode !== 0) {
 +      throw new Error(
-+        [
-+          'build failed',
-+          build.stdout.toString(),
-+          build.stderr.toString(),
-+        ].join('\n'),
++        ['build failed', build.stdout.toString(), build.stderr.toString()].join(
++          '\n',
++        ),
 +      );
 +    }
 +
@@ -1185,20 +1220,55 @@ index 35bc21a..7e251f1 100644
    };
  }
 diff --git a/src/agents/index.test.ts b/src/agents/index.test.ts
-index f8f5133..1c5280f 100644
+index f8f5133..7937125 100644
 --- a/src/agents/index.test.ts
 +++ b/src/agents/index.test.ts
-@@ -1,4 +1,5 @@
- import { describe, expect, test } from 'bun:test';
+@@ -1,4 +1,9 @@
+-import { describe, expect, test } from 'bun:test';
++import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
 +import { getSkillPermissionsForAgent } from '../cli/skills';
++import { clearSuperpowersSkillDiscoveryCache } from '../cli/superpowers-policy';
  import type { PluginConfig } from '../config';
  import {
    AgentOverrideConfigSchema,
-@@ -15,13 +16,13 @@ import {
+@@ -15,13 +20,42 @@ import {
    getEnabledAgentNames,
    isSubagent,
  } from './index';
 +import { decideTaskPreroute } from './preroute-decision';
++
++const TASK_FALLBACKS_FIXTURE = {
++  librarian: {
++    shadowAgentName: 'librarian__task_fallback',
++  },
++};
++
++const SUPERPOWERS_TEST_SKILLS = [
++  'brainstorming',
++  'receiving-code-review',
++  'requesting-code-review',
++  'subagent-driven-development',
++  'systematic-debugging',
++  'test-driven-development',
++  'using-superpowers',
++  'verification-before-completion',
++  'writing-plans',
++];
++
++let skillsRoot: string;
++
++beforeEach(() => {
++  skillsRoot = mkdtempSync(join(tmpdir(), 'omo-lite-policy-'));
++  for (const name of SUPERPOWERS_TEST_SKILLS) {
++    const dir = join(skillsRoot, name);
++    mkdirSync(dir, { recursive: true });
++    writeFileSync(join(dir, 'SKILL.md'), `---\nname: ${name}\n---\n`);
++  }
++  clearSuperpowersSkillDiscoveryCache();
++});
  
 -function councilConfig() {
 -  const parsed = CouncilConfigSchema.parse({
@@ -1206,15 +1276,14 @@ index f8f5133..1c5280f 100644
 -  });
 -  return parsed;
 -}
-+const TASK_FALLBACKS_FIXTURE = {
-+  librarian: {
-+    shadowAgentName: 'librarian__task_fallback',
-+  },
-+};
++afterEach(() => {
++  rmSync(skillsRoot, { recursive: true, force: true });
++  clearSuperpowersSkillDiscoveryCache();
++});
  
  describe('agent alias backward compatibility', () => {
    test("applies 'explore' config to 'explorer' agent", () => {
-@@ -125,6 +126,91 @@ describe('fixer agent fallback', () => {
+@@ -125,6 +159,91 @@ describe('fixer agent fallback', () => {
    });
  });
  
@@ -1306,13 +1375,14 @@ index f8f5133..1c5280f 100644
  describe('orchestrator agent', () => {
    test('orchestrator is first in agents array', () => {
      const agents = createAgents();
-@@ -260,30 +346,47 @@ describe('skill permissions', () => {
+@@ -260,30 +379,89 @@ describe('skill permissions', () => {
      expect(skillPerm?.clonedeps).not.toBe('allow');
    });
  
 -  test('oracle gets requesting-code-review skill allowed by default', () => {
+-    const agents = createAgents();
 +  test('oracle does not get requesting-code-review skill allowed by default', () => {
-     const agents = createAgents();
++    const agents = createAgents({ superpowersSkillsDir: skillsRoot });
      const oracle = agents.find((a) => a.name === 'oracle');
      expect(oracle).toBeDefined();
      const skillPerm = (oracle?.config.permission as Record<string, unknown>)
@@ -1341,13 +1411,55 @@ index f8f5133..1c5280f 100644
 +    expect(skillPerm?.simplify).not.toBe('allow');
 +  });
 +
++  test('threads the configured catalog to orchestrator variants and constrained workers', () => {
++    const agents = createAgents({
++      superpowersSkillsDir: skillsRoot,
++      agents: {
++        'orchestrator-beta': { model: 'test/orchestrator-beta' },
++        'orchestrator-delta': { model: 'test/orchestrator-delta' },
++      },
++    });
++
++    for (const name of [
++      'orchestrator',
++      'orchestrator-beta',
++      'orchestrator-delta',
++    ]) {
++      const skillPerm = (
++        agents.find((agent) => agent.name === name)?.config
++          .permission as Record<string, unknown>
++      )?.skill as Record<string, string>;
++      expect(skillPerm.brainstorming).toBe('allow');
++      expect(skillPerm['writing-plans']).toBe('allow');
++      expect(skillPerm['using-superpowers']).toBe('deny');
++    }
++
++    for (const name of ['fixer', 'designer']) {
++      const skillPerm = (
++        agents.find((agent) => agent.name === name)?.config
++          .permission as Record<string, unknown>
++      )?.skill as Record<string, string>;
++      expect(skillPerm['test-driven-development']).toBe('allow');
++      expect(skillPerm.brainstorming).toBe('deny');
++      expect(skillPerm['using-superpowers']).toBe('deny');
++    }
++  });
++
 +  test('fixer-alpha has simplify (variant inherits at skill-resolution layer)', () => {
-+    const skillPerm = getSkillPermissionsForAgent('fixer-alpha');
++    const skillPerm = getSkillPermissionsForAgent(
++      'fixer-alpha',
++      undefined,
++      skillsRoot,
++    );
 +    expect(skillPerm.simplify).toBe('allow');
 +  });
 +
 +  test('oracle-alpha does NOT have simplify (variant inherits at skill-resolution layer)', () => {
-+    const skillPerm = getSkillPermissionsForAgent('oracle-alpha');
++    const skillPerm = getSkillPermissionsForAgent(
++      'oracle-alpha',
++      undefined,
++      skillsRoot,
++    );
 +    expect(skillPerm.simplify).not.toBe('allow');
    });
  });
@@ -1361,7 +1473,7 @@ index f8f5133..1c5280f 100644
      const council = agents.find((a) => a.name === 'council');
      expect((council?.config.permission as any).council_session).toBe('allow');
    });
-@@ -345,7 +448,7 @@ describe('agent classification', () => {
+@@ -345,7 +523,7 @@ describe('agent classification', () => {
      for (const name of SUBAGENT_NAMES) {
        // Council is a dual-mode agent ("all"), rest are subagents
        if (name === 'council') {
@@ -1370,7 +1482,7 @@ index f8f5133..1c5280f 100644
        } else {
          expect(configs[name].mode).toBe('subagent');
        }
-@@ -365,32 +468,11 @@ describe('createAgents', () => {
+@@ -365,32 +543,11 @@ describe('createAgents', () => {
      expect(names).toContain('fixer');
    });
  
@@ -1405,7 +1517,7 @@ index f8f5133..1c5280f 100644
  describe('getAgentConfigs', () => {
    test('returns config record keyed by agent name', () => {
      const configs = getAgentConfigs();
-@@ -406,13 +488,126 @@ describe('getAgentConfigs', () => {
+@@ -406,13 +563,126 @@ describe('getAgentConfigs', () => {
      expect(configs.orchestrator.description).toBeDefined();
      expect(configs.explorer.description).toBeDefined();
    });
@@ -1535,7 +1647,7 @@ index f8f5133..1c5280f 100644
      const council = agents.find((a) => a.name === 'council');
      expect(council?.config.model).toBe(DEFAULT_MODELS.council);
    });
-@@ -428,10 +623,14 @@ describe('council agent model resolution', () => {
+@@ -428,10 +698,14 @@ describe('council agent model resolution', () => {
      // entry in the agent preset — the exact scenario from issue #369.
      const config: PluginConfig = {
        agents: {
@@ -1552,7 +1664,7 @@ index f8f5133..1c5280f 100644
          _legacyMasterModel: 'anthropic/claude-opus-4-6',
        },
      };
-@@ -447,7 +646,11 @@ describe('council agent model resolution', () => {
+@@ -447,7 +721,11 @@ describe('council agent model resolution', () => {
          council: { model: 'google/gemini-3-pro' },
        },
        council: {
@@ -1565,7 +1677,7 @@ index f8f5133..1c5280f 100644
          _legacyMasterModel: 'anthropic/claude-opus-4-6',
        },
      };
-@@ -459,7 +662,13 @@ describe('council agent model resolution', () => {
+@@ -459,7 +737,13 @@ describe('council agent model resolution', () => {
    test('council uses default when no legacy master and no preset override', () => {
      // No legacy master, no preset override → standard default
      const config: PluginConfig = {
@@ -1580,7 +1692,7 @@ index f8f5133..1c5280f 100644
      };
      const agents = createAgents(config);
      const council = agents.find((a) => a.name === 'council');
-@@ -499,7 +708,7 @@ describe('options passthrough', () => {
+@@ -499,7 +783,7 @@ describe('options passthrough', () => {
      const config: PluginConfig = {
        agents: {
          oracle: {
@@ -1589,7 +1701,7 @@ index f8f5133..1c5280f 100644
            options: { textVerbosity: 'low' },
          },
        },
-@@ -531,7 +740,7 @@ describe('options passthrough', () => {
+@@ -531,7 +815,7 @@ describe('options passthrough', () => {
      const config: PluginConfig = {
        agents: {
          oracle: {
@@ -1598,7 +1710,7 @@ index f8f5133..1c5280f 100644
            variant: 'high',
            temperature: 0.7,
            options: { textVerbosity: 'low', reasoningEffort: 'medium' },
-@@ -540,7 +749,7 @@ describe('options passthrough', () => {
+@@ -540,7 +824,7 @@ describe('options passthrough', () => {
      };
      const agents = createAgents(config);
      const oracle = agents.find((a) => a.name === 'oracle');
@@ -1607,7 +1719,7 @@ index f8f5133..1c5280f 100644
      expect(oracle?.config.variant).toBe('high');
      expect(oracle?.config.temperature).toBe(0.7);
      expect(oracle?.config.options).toEqual({
-@@ -552,7 +761,7 @@ describe('options passthrough', () => {
+@@ -552,7 +836,7 @@ describe('options passthrough', () => {
    test('options are absent when not configured', () => {
      const config: PluginConfig = {
        agents: {
@@ -1616,7 +1728,7 @@ index f8f5133..1c5280f 100644
        },
      };
      const agents = createAgents(config);
-@@ -564,7 +773,7 @@ describe('options passthrough', () => {
+@@ -564,7 +848,7 @@ describe('options passthrough', () => {
      const config: PluginConfig = {
        agents: {
          oracle: {
@@ -1625,7 +1737,7 @@ index f8f5133..1c5280f 100644
            options: { textVerbosity: 'low' },
          },
        },
-@@ -578,7 +787,7 @@ describe('options passthrough', () => {
+@@ -578,7 +862,7 @@ describe('options passthrough', () => {
      const config: PluginConfig = {
        agents: {
          oracle: {
@@ -1634,7 +1746,7 @@ index f8f5133..1c5280f 100644
            options: { reasoningEffort: 'medium' },
          },
        },
-@@ -614,7 +823,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -614,7 +898,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('accepts options alongside other fields', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1643,7 +1755,7 @@ index f8f5133..1c5280f 100644
        variant: 'high',
        temperature: 0.7,
        options: { textVerbosity: 'low' },
-@@ -627,7 +836,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -627,7 +911,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('config without options is valid', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1652,7 +1764,7 @@ index f8f5133..1c5280f 100644
      });
      expect(result.success).toBe(true);
      if (result.success) {
-@@ -651,7 +860,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -651,7 +935,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('accepts prompt and orchestratorPrompt override fields', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1661,7 +1773,7 @@ index f8f5133..1c5280f 100644
        prompt: 'You are a specialized reviewer.',
        orchestratorPrompt: '@reviewer\n- Role: Specialized reviewer',
      });
-@@ -666,7 +875,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -666,7 +950,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('rejects empty prompt fields', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1670,7 +1782,7 @@ index f8f5133..1c5280f 100644
        prompt: '',
      });
      expect(result.success).toBe(false);
-@@ -674,7 +883,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -674,7 +958,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('rejects empty orchestratorPrompt fields', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1679,7 +1791,7 @@ index f8f5133..1c5280f 100644
        orchestratorPrompt: '',
      });
      expect(result.success).toBe(false);
-@@ -682,7 +891,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
+@@ -682,7 +966,7 @@ describe('AgentOverrideConfigSchema options validation', () => {
  
    test('rejects description field on overrides', () => {
      const result = AgentOverrideConfigSchema.safeParse({
@@ -1688,7 +1800,7 @@ index f8f5133..1c5280f 100644
        description: 'not supported for custom agents',
      } as Record<string, unknown>);
      expect(result.success).toBe(false);
-@@ -694,7 +903,7 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
+@@ -694,7 +978,7 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
      const result = PluginConfigSchema.safeParse({
        agents: {
          oracle: {
@@ -1697,7 +1809,7 @@ index f8f5133..1c5280f 100644
            prompt: 'ignored built-in prompt override',
          },
        },
-@@ -721,7 +930,7 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
+@@ -721,7 +1005,7 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
        presets: {
          openai: {
            oracle: {
@@ -1706,7 +1818,7 @@ index f8f5133..1c5280f 100644
              prompt: 'ignored preset built-in prompt override',
            },
          },
-@@ -744,18 +953,6 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
+@@ -744,18 +1028,6 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
  
      expect(result.success).toBe(true);
    });
@@ -1725,7 +1837,7 @@ index f8f5133..1c5280f 100644
  });
  
  describe('disabled_agents', () => {
-@@ -796,13 +993,13 @@ describe('disabled_agents', () => {
+@@ -796,13 +1068,13 @@ describe('disabled_agents', () => {
  
    test('agent count decreases when agents are disabled', () => {
      const agents = createAgents();
@@ -1741,7 +1853,7 @@ index f8f5133..1c5280f 100644
    });
  
    test('getDisabledAgents respects protection rules', () => {
-@@ -840,15 +1037,13 @@ describe('disabled_agents', () => {
+@@ -840,15 +1112,13 @@ describe('disabled_agents', () => {
      expect(enabled).not.toContain('janitor');
    });
  
@@ -1760,7 +1872,7 @@ index f8f5133..1c5280f 100644
    });
  });
  
-@@ -891,3 +1086,173 @@ describe('observer agent', () => {
+@@ -891,3 +1161,171 @@ describe('observer agent', () => {
      expect(DEFAULT_DISABLED_AGENTS).toContain('observer');
    });
  });
@@ -1862,7 +1974,6 @@ index f8f5133..1c5280f 100644
 +    expect(verdict.action).toBe('passthrough');
 +  });
 +
-+
 +  test('passes through anthropic-primary subagent when root agent is orchestrator-delta', async () => {
 +    const verdict = await decideTaskPreroute({
 +      rootAgent: 'orchestrator-delta',
@@ -1922,7 +2033,6 @@ index f8f5133..1c5280f 100644
 +    expect(verdict.action).toBe('passthrough');
 +  });
 +
-+
 +  test('passes through resumed anthropic-primary child when root agent is orchestrator-delta', async () => {
 +    const verdict = await decideTaskPreroute({
 +      rootAgent: 'orchestrator-delta',
@@ -1935,7 +2045,7 @@ index f8f5133..1c5280f 100644
 +  });
 +});
 diff --git a/src/agents/index.ts b/src/agents/index.ts
-index 5ed920f..cfe5f99 100644
+index 5ed920f..7c88bc6 100644
 --- a/src/agents/index.ts
 +++ b/src/agents/index.ts
 @@ -1,5 +1,6 @@
@@ -2011,7 +2121,23 @@ index 5ed920f..cfe5f99 100644
  // Agent Configuration Helpers
  
  /**
-@@ -224,9 +270,6 @@ const SUBAGENT_FACTORIES: Record<SubagentName, AgentFactory> = {
+@@ -162,6 +208,7 @@ function injectDisplayNames(
+ function applyDefaultPermissions(
+   agent: AgentDefinition,
+   configuredSkills?: string[],
++  superpowersSkillsDir?: string,
+ ): void {
+   const existing = (agent.config.permission ?? {}) as Record<
+     string,
+@@ -172,6 +219,7 @@ function applyDefaultPermissions(
+   const skillPermissions = getSkillPermissionsForAgent(
+     agent.name,
+     configuredSkills,
++    superpowersSkillsDir,
+   );
+ 
+   // Respect explicit deny on question (councillor)
+@@ -224,9 +272,6 @@ const SUBAGENT_FACTORIES: Record<SubagentName, AgentFactory> = {
   */
  export function createAgents(config?: PluginConfig): AgentDefinition[] {
    const disabled = getDisabledAgents(config);
@@ -2021,7 +2147,46 @@ index 5ed920f..cfe5f99 100644
  
    // TEMP: If fixer has no config, inherit from librarian's model to avoid breaking
    // existing users who don't have fixer in their config yet
-@@ -448,7 +491,10 @@ export function getAgentConfigs(
+@@ -301,7 +346,11 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
+     if (override) {
+       applyOverrides(agent, override);
+     }
+-    applyDefaultPermissions(agent, override?.skills);
++    applyDefaultPermissions(
++      agent,
++      override?.skills,
++      config?.superpowersSkillsDir,
++    );
+     return agent;
+   });
+ 
+@@ -325,7 +374,11 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
+     if (override) {
+       applyOverrides(agent, override);
+     }
+-    applyDefaultPermissions(agent, override?.skills);
++    applyDefaultPermissions(
++      agent,
++      override?.skills,
++      config?.superpowersSkillsDir,
++    );
+     return agent;
+   });
+ 
+@@ -344,7 +397,11 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
+     orchestratorPrompts.appendPrompt,
+     disabled,
+   );
+-  applyDefaultPermissions(orchestrator, orchestratorOverride?.skills);
++  applyDefaultPermissions(
++    orchestrator,
++    orchestratorOverride?.skills,
++    config?.superpowersSkillsDir,
++  );
+   if (orchestratorOverride) {
+     applyOverrides(orchestrator, orchestratorOverride);
+   }
+@@ -448,7 +505,10 @@ export function getAgentConfigs(
        sdkConfig.hidden = true;
      } else if (isSubagent(name)) {
        sdkConfig.mode = 'subagent';
@@ -2033,7 +2198,7 @@ index 5ed920f..cfe5f99 100644
        sdkConfig.mode = 'primary';
      } else {
        sdkConfig.mode = 'subagent';
-@@ -476,17 +522,41 @@ export function getAgentConfigs(
+@@ -476,17 +536,41 @@ export function getAgentConfigs(
  
      applyClassification(a.name, sdkConfig);
  
@@ -2075,7 +2240,7 @@ index 5ed920f..cfe5f99 100644
    }
  
    return Object.fromEntries(entries);
-@@ -513,9 +583,6 @@ export function getDisabledAgents(config?: PluginConfig): Set<string> {
+@@ -513,9 +597,6 @@ export function getDisabledAgents(config?: PluginConfig): Set<string> {
   */
  export function getEnabledAgentNames(config?: PluginConfig): string[] {
    const disabled = getDisabledAgents(config);
@@ -2141,10 +2306,10 @@ index 792904d..dd3d5a2 100644
  }
 diff --git a/src/agents/preroute-decision.ts b/src/agents/preroute-decision.ts
 new file mode 100644
-index 0000000..4ca8b5c
+index 0000000..dbe6a46
 --- /dev/null
 +++ b/src/agents/preroute-decision.ts
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,62 @@
 +import { isPivotedRootAgent } from '../utils/orchestrator-identity';
 +
 +export type TaskPrerouteVerdict =
@@ -2157,10 +2322,7 @@ index 0000000..4ca8b5c
 +  subagentType: string;
 +  taskId?: string;
 +  lookupSessionAgent?: (sessionID: string) => Promise<string | undefined>;
-+  anthropicTaskFallbacks: Record<
-+    string,
-+    { shadowAgentName: string }
-+  >;
++  anthropicTaskFallbacks: Record<string, { shadowAgentName: string }>;
 +}
 +
 +export async function decideTaskPreroute(
@@ -2212,10 +2374,10 @@ index 0000000..4ca8b5c
 +}
 diff --git a/src/cli/agent-tier-policy.test.ts b/src/cli/agent-tier-policy.test.ts
 new file mode 100644
-index 0000000..84e49b2
+index 0000000..5f21bd1
 --- /dev/null
 +++ b/src/cli/agent-tier-policy.test.ts
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,80 @@
 +import { describe, expect, test } from 'bun:test';
 +import { getDefaultNonSpPolicy } from './agent-tier-policy';
 +
@@ -2227,7 +2389,6 @@ index 0000000..84e49b2
 +  test('orchestrator-beta: allow', () => {
 +    expect(getDefaultNonSpPolicy('orchestrator-beta')).toBe('allow');
 +  });
-+
 +
 +  test('orchestrator-delta: allow', () => {
 +    expect(getDefaultNonSpPolicy('orchestrator-delta')).toBe('allow');
@@ -3309,88 +3470,280 @@ index 1fb13b2..1aa0ea2 100644
    } else if (args[0] === '-h' || args[0] === '--help') {
      printHelp();
      process.exit(0);
+diff --git a/src/cli/paths.test.ts b/src/cli/paths.test.ts
+index 437c5f9..131afb4 100644
+--- a/src/cli/paths.test.ts
++++ b/src/cli/paths.test.ts
+@@ -35,7 +35,7 @@ describe('paths', () => {
+   test('getConfigDir() uses XDG_CONFIG_HOME when set', () => {
+     delete process.env.OPENCODE_CONFIG_DIR;
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+-    expect(getConfigDir()).toBe('/tmp/xdg-config/opencode');
++    expect(getConfigDir()).toBe(join('/tmp/xdg-config', 'opencode'));
+   });
+ 
+   test('getConfigDir() falls back to ~/.config when XDG_CONFIG_HOME is unset', () => {
+@@ -51,22 +51,24 @@ describe('paths', () => {
+ 
+     expect(getConfigSearchDirs()).toEqual([
+       '/custom/directory',
+-      '/tmp/xdg-config/opencode',
++      join('/tmp/xdg-config', 'opencode'),
+     ]);
+   });
+ 
+   test('getConfigSearchDirs() de-duplicates identical dirs', () => {
+-    process.env.OPENCODE_CONFIG_DIR = '/tmp/xdg-config/opencode';
++    process.env.OPENCODE_CONFIG_DIR = join('/tmp/xdg-config', 'opencode');
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+ 
+-    expect(getConfigSearchDirs()).toEqual(['/tmp/xdg-config/opencode']);
++    expect(getConfigSearchDirs()).toEqual([
++      join('/tmp/xdg-config', 'opencode'),
++    ]);
+   });
+ 
+   test('getOpenCodeConfigPaths() returns both json and jsonc paths', () => {
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+     expect(getOpenCodeConfigPaths()).toEqual([
+-      '/tmp/xdg-config/opencode/opencode.json',
+-      '/tmp/xdg-config/opencode/opencode.jsonc',
++      join('/tmp/xdg-config', 'opencode', 'opencode.json'),
++      join('/tmp/xdg-config', 'opencode', 'opencode.jsonc'),
+     ]);
+   });
+ 
+@@ -74,31 +76,37 @@ describe('paths', () => {
+     process.env.OPENCODE_CONFIG_DIR = '/custom/directory';
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+     expect(getOpenCodeConfigPaths()).toEqual([
+-      '/custom/directory/opencode.json',
+-      '/custom/directory/opencode.jsonc',
++      join('/custom/directory', 'opencode.json'),
++      join('/custom/directory', 'opencode.jsonc'),
+     ]);
+   });
+ 
+   test('getConfigJson() returns correct path', () => {
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+-    expect(getConfigJson()).toBe('/tmp/xdg-config/opencode/opencode.json');
++    expect(getConfigJson()).toBe(
++      join('/tmp/xdg-config', 'opencode', 'opencode.json'),
++    );
+   });
+ 
+   test('getConfigJsonc() returns correct path', () => {
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+-    expect(getConfigJsonc()).toBe('/tmp/xdg-config/opencode/opencode.jsonc');
++    expect(getConfigJsonc()).toBe(
++      join('/tmp/xdg-config', 'opencode', 'opencode.jsonc'),
++    );
+   });
+ 
+   test('getLiteConfig() returns correct path', () => {
+     process.env.XDG_CONFIG_HOME = '/tmp/xdg-config';
+     expect(getLiteConfig()).toBe(
+-      '/tmp/xdg-config/opencode/oh-my-opencode-slim.json',
++      join('/tmp/xdg-config', 'opencode', 'oh-my-opencode-slim.json'),
+     );
+   });
+ 
+   test('getLiteConfig() respects OPENCODE_CONFIG_DIR', () => {
+     process.env.OPENCODE_CONFIG_DIR = '/custom/directory';
+-    expect(getLiteConfig()).toBe('/custom/directory/oh-my-opencode-slim.json');
++    expect(getLiteConfig()).toBe(
++      join('/custom/directory', 'oh-my-opencode-slim.json'),
++    );
+   });
+ 
+   describe('getExistingConfigPath()', () => {
+diff --git a/src/cli/providers.test.ts b/src/cli/providers.test.ts
+index 7c8f6b9..4027c9f 100644
+--- a/src/cli/providers.test.ts
++++ b/src/cli/providers.test.ts
+@@ -142,8 +142,8 @@ describe('providers', () => {
+     // Orchestrator should always have '*'
+     expect(agents.orchestrator.skills).toEqual(['*']);
+ 
+-    // Oracle should have bundled simplify
+-    expect(agents.oracle.skills).toContain('simplify');
++    // The bridge assigns bundled simplify to fixer, not oracle.
++    expect(agents.oracle.skills).not.toContain('simplify');
+ 
+     // Orchestrator should implicitly cover bundled codemap via '*'
+     expect(agents.orchestrator.skills).toContain('*');
+@@ -154,8 +154,8 @@ describe('providers', () => {
+     // Explorer should have no bundled skills by default
+     expect(agents.explorer.skills).toEqual([]);
+ 
+-    // Fixer should have no bundled skills by default
+-    expect(agents.fixer.skills).toEqual([]);
++    // Fixer owns bundled simplify in the bridge policy.
++    expect(agents.fixer.skills).toContain('simplify');
+   });
+ 
+   test('generateLiteConfig includes mcps field', () => {
 diff --git a/src/cli/skills.test.ts b/src/cli/skills.test.ts
-index 6aefc88..df0081c 100644
+index 6aefc88..0f64157 100644
 --- a/src/cli/skills.test.ts
 +++ b/src/cli/skills.test.ts
-@@ -1,37 +1,59 @@
+@@ -1,48 +1,296 @@
 -import { describe, expect, it } from 'bun:test';
-+import { describe, expect, test } from 'bun:test';
++import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
  import { getSkillPermissionsForAgent } from './skills';
++import { clearSuperpowersSkillDiscoveryCache } from './superpowers-policy';
++
++const SUPERPOWERS_TEST_SKILLS = [
++  'brainstorming',
++  'receiving-code-review',
++  'requesting-code-review',
++  'subagent-driven-development',
++  'systematic-debugging',
++  'test-driven-development',
++  'using-superpowers',
++  'verification-before-completion',
++  'writing-plans',
++];
++
++let skillsRoot: string;
++
++beforeEach(() => {
++  skillsRoot = mkdtempSync(join(tmpdir(), 'omo-lite-policy-'));
++  for (const name of SUPERPOWERS_TEST_SKILLS) {
++    const dir = join(skillsRoot, name);
++    mkdirSync(dir, { recursive: true });
++    writeFileSync(join(dir, 'SKILL.md'), `---\nname: ${name}\n---\n`);
++  }
++  clearSuperpowersSkillDiscoveryCache();
++});
++
++afterEach(() => {
++  rmSync(skillsRoot, { recursive: true, force: true });
++  clearSuperpowersSkillDiscoveryCache();
++});
  
  describe('skills permissions', () => {
 -  it('should allow all skills for orchestrator by default', () => {
+-    const permissions = getSkillPermissionsForAgent('orchestrator');
 +  test('allows non-superpowers skills by default', () => {
 +    const permissions = getSkillPermissionsForAgent('designer');
 +
-+    expect(permissions['*']).toBe('allow');
+     expect(permissions['*']).toBe('allow');
 +    expect(permissions['agent-browser']).toBe('allow');
 +    expect(permissions.simplify).toBeUndefined();
-+  });
-+
-+  test('applies superpowers policy for orchestrator', () => {
-     const permissions = getSkillPermissionsForAgent('orchestrator');
-+
-     expect(permissions['*']).toBe('allow');
-+    expect(permissions.brainstorming).toBe('allow');
-+    expect(permissions['writing-plans']).toBe('allow');
-+    expect(permissions['using-superpowers']).toBe('deny');
    });
  
 -  it('should deny all skills for other agents by default', () => {
-+  test('allows only approved superpowers skills for designer', () => {
-     const permissions = getSkillPermissionsForAgent('designer');
+-    const permissions = getSkillPermissionsForAgent('designer');
 -    expect(permissions['*']).toBe('deny');
++  test('applies superpowers policy for orchestrator', () => {
++    const permissions = getSkillPermissionsForAgent(
++      'orchestrator',
++      undefined,
++      skillsRoot,
++    );
++
++    expect(permissions['*']).toBe('allow');
++    expect(permissions.brainstorming).toBe('allow');
++    expect(permissions['writing-plans']).toBe('allow');
++    expect(permissions['using-superpowers']).toBe('deny');
++  });
++
++  test('allows only approved superpowers skills for designer', () => {
++    const permissions = getSkillPermissionsForAgent(
++      'designer',
++      undefined,
++      skillsRoot,
++    );
 +
 +    expect(permissions['test-driven-development']).toBe('allow');
 +    expect(permissions['systematic-debugging']).toBe('allow');
 +    expect(permissions['verification-before-completion']).toBe('allow');
 +    expect(permissions.brainstorming).toBe('deny');
 +    expect(permissions['using-superpowers']).toBe('deny');
-   });
- 
--  it('should allow bundled skills for specific agents', () => {
--    // Designer should only inherit the default non-orchestrator deny rule
--    const designerPerms = getSkillPermissionsForAgent('designer');
--    expect(Object.keys(designerPerms)).toEqual(['*']);
++  });
++
 +  test('does not bypass superpowers gating through legacy permission-only skills', () => {
-+    const permissions = getSkillPermissionsForAgent('oracle');
++    const permissions = getSkillPermissionsForAgent(
++      'oracle',
++      undefined,
++      skillsRoot,
++    );
 +
 +    expect(permissions.simplify).not.toBe('allow');
 +    expect(permissions['receiving-code-review']).toBe('deny');
 +    expect(permissions['requesting-code-review']).toBe('deny');
 +    expect(permissions['writing-plans']).toBe('deny');
 +  });
- 
--    // Oracle should have simplify allowed by default
--    const oraclePerms = getSkillPermissionsForAgent('oracle');
--    expect(oraclePerms.simplify).toBe('allow');
++
 +  test('moves simplify from oracle variants to fixer family', () => {
 +    const fixerPermissions = getSkillPermissionsForAgent('fixer');
 +    const fixerAlphaPermissions = getSkillPermissionsForAgent('fixer-alpha');
 +    const oracleAlphaPermissions = getSkillPermissionsForAgent('oracle-alpha');
- 
--    const orchestratorPerms = getSkillPermissionsForAgent('orchestrator');
--    expect(orchestratorPerms.clonedeps).toBe('allow');
++
 +    expect(fixerPermissions.simplify).toBe('allow');
 +    expect(fixerAlphaPermissions.simplify).toBe('allow');
 +    expect(oracleAlphaPermissions.simplify).not.toBe('allow');
    });
  
+-  it('should allow bundled skills for specific agents', () => {
+-    // Designer should only inherit the default non-orchestrator deny rule
+-    const designerPerms = getSkillPermissionsForAgent('designer');
+-    expect(Object.keys(designerPerms)).toEqual(['*']);
++  test('uses only the configured Lite catalog for orchestrator permissions', () => {
++    const permissions = getSkillPermissionsForAgent(
++      'orchestrator',
++      undefined,
++      skillsRoot,
++    );
+ 
+-    // Oracle should have simplify allowed by default
+-    const oraclePerms = getSkillPermissionsForAgent('oracle');
+-    expect(oraclePerms.simplify).toBe('allow');
++    expect(permissions.brainstorming).toBe('allow');
++    expect(permissions['writing-plans']).toBe('allow');
++    expect(permissions['using-superpowers']).toBe('deny');
++    expect(permissions['not-in-lite-catalog']).toBeUndefined();
++  });
+ 
+-    const orchestratorPerms = getSkillPermissionsForAgent('orchestrator');
+-    expect(orchestratorPerms.clonedeps).toBe('allow');
++  test('disables the Superpowers overlay when no Lite catalog is configured', () => {
++    const permissions = getSkillPermissionsForAgent('orchestrator');
++
++    expect(permissions['*']).toBe('allow');
++    expect(permissions.brainstorming).toBeUndefined();
++    expect(permissions['writing-plans']).toBeUndefined();
++    expect(permissions['using-superpowers']).toBeUndefined();
+   });
+ 
 -  it('should honor explicit skill list overrides', () => {
 -    // Override with empty list
+-    const emptyPerms = getSkillPermissionsForAgent('orchestrator', []);
 +  test('honors explicit skill list overrides', () => {
-     const emptyPerms = getSkillPermissionsForAgent('orchestrator', []);
++    const emptyPerms = getSkillPermissionsForAgent(
++      'orchestrator',
++      [],
++      skillsRoot,
++    );
      expect(emptyPerms['*']).toBe('deny');
 -    expect(Object.keys(emptyPerms).length).toBe(1);
 +    expect(emptyPerms.brainstorming).toBe('deny');
 +    expect(emptyPerms['using-superpowers']).toBe('deny');
  
 -    // Override with specific list
-     const specificPerms = getSkillPermissionsForAgent('designer', [
-       'my-skill',
-       '!bad-skill',
-@@ -39,10 +61,159 @@ describe('skills permissions', () => {
+-    const specificPerms = getSkillPermissionsForAgent('designer', [
+-      'my-skill',
+-      '!bad-skill',
+-    ]);
++    const specificPerms = getSkillPermissionsForAgent(
++      'designer',
++      ['my-skill', '!bad-skill'],
++      skillsRoot,
++    );
      expect(specificPerms['*']).toBe('deny');
      expect(specificPerms['my-skill']).toBe('allow');
      expect(specificPerms['bad-skill']).toBe('deny');
@@ -3398,29 +3751,36 @@ index 6aefc88..df0081c 100644
 +  });
 +
 +  test('does not let explicit skill lists grant forbidden superpowers skills', () => {
-+    const permissions = getSkillPermissionsForAgent('designer', [
-+      'writing-plans',
-+      'using-superpowers',
-+      'agent-browser',
-+    ]);
++    const permissions = getSkillPermissionsForAgent(
++      'designer',
++      ['writing-plans', 'using-superpowers', 'agent-browser'],
++      skillsRoot,
++    );
 +
 +    expect(permissions['writing-plans']).toBe('deny');
 +    expect(permissions['using-superpowers']).toBe('deny');
 +    expect(permissions['agent-browser']).toBe('allow');
-+  });
-+
-+  test('lets explicit skill lists narrow otherwise-allowed superpowers skills', () => {
-+    const permissions = getSkillPermissionsForAgent('orchestrator', [
-+      'brainstorming',
-+    ]);
-+
-+    expect(permissions.brainstorming).toBe('allow');
-+    expect(permissions['writing-plans']).toBe('deny');
    });
  
 -  it('should honor wildcard in explicit list', () => {
+-    const wildcardPerms = getSkillPermissionsForAgent('designer', ['*']);
++  test('lets explicit skill lists narrow otherwise-allowed superpowers skills', () => {
++    const permissions = getSkillPermissionsForAgent(
++      'orchestrator',
++      ['brainstorming'],
++      skillsRoot,
++    );
++
++    expect(permissions.brainstorming).toBe('allow');
++    expect(permissions['writing-plans']).toBe('deny');
++  });
++
 +  test('honors wildcard in explicit list', () => {
-     const wildcardPerms = getSkillPermissionsForAgent('designer', ['*']);
++    const wildcardPerms = getSkillPermissionsForAgent(
++      'designer',
++      ['*'],
++      skillsRoot,
++    );
      expect(wildcardPerms['*']).toBe('allow');
 +    expect(wildcardPerms['writing-plans']).toBe('deny');
 +    expect(wildcardPerms['test-driven-development']).toBe('allow');
@@ -3430,7 +3790,7 @@ index 6aefc88..df0081c 100644
 +
 +describe('getSkillPermissionsForAgent — tier 3 default deny', () => {
 +  test('oracle has * deny (tier 3)', () => {
-+    const perms = getSkillPermissionsForAgent('oracle');
++    const perms = getSkillPermissionsForAgent('oracle', undefined, skillsRoot);
 +    expect(perms['*']).toBe('deny');
 +  });
 +
@@ -3465,7 +3825,7 @@ index 6aefc88..df0081c 100644
 +  });
 +
 +  test('oracle preserves SP allow for systematic-debugging despite * deny', () => {
-+    const perms = getSkillPermissionsForAgent('oracle');
++    const perms = getSkillPermissionsForAgent('oracle', undefined, skillsRoot);
 +    expect(perms['systematic-debugging']).toBe('allow');
 +  });
 +});
@@ -3486,7 +3846,6 @@ index 6aefc88..df0081c 100644
 +    expect(perms['best-of-n-with-judge']).toBe('allow');
 +    expect(perms['update-memory']).toBe('allow');
 +  });
-+
 +
 +  test('orchestrator-delta can use both reserved skills', () => {
 +    const perms = getSkillPermissionsForAgent('orchestrator-delta');
@@ -3546,16 +3905,16 @@ index 6aefc88..df0081c 100644
 +
 +describe('getSkillPermissionsForAgent — explicit skillList override still works', () => {
 +  test('laborer with skills:[] gets * deny + all SP denied', () => {
-+    const perms = getSkillPermissionsForAgent('laborer', []);
++    const perms = getSkillPermissionsForAgent('laborer', [], skillsRoot);
 +    expect(perms['*']).toBe('deny');
 +    expect(perms['systematic-debugging']).toBe('deny');
    });
  });
 diff --git a/src/cli/skills.ts b/src/cli/skills.ts
-index c5ff7d3..7c64d31 100644
+index c5ff7d3..5f41061 100644
 --- a/src/cli/skills.ts
 +++ b/src/cli/skills.ts
-@@ -1,4 +1,32 @@
+@@ -1,4 +1,33 @@
 +import { spawnSync } from 'node:child_process';
 +import {
 +  isReservedSkillAllowed,
@@ -3565,6 +3924,7 @@ index c5ff7d3..7c64d31 100644
  import { CUSTOM_SKILLS } from './custom-skills';
 +import {
 +  buildSuperpowersSkillPermissions,
++  discoverSuperpowersSkillNames,
 +  resolveBaseAgentName,
 +} from './superpowers-policy';
 +
@@ -3588,7 +3948,7 @@ index c5ff7d3..7c64d31 100644
  
  /**
   * A skill that is managed externally (e.g. user-installed) and needs
-@@ -14,53 +42,138 @@ export interface PermissionOnlySkill {
+@@ -14,53 +43,144 @@ export interface PermissionOnlySkill {
  }
  
  /**
@@ -3672,17 +4032,23 @@ index c5ff7d3..7c64d31 100644
   * @param agentName - The name of the agent
 - * @param skillList - Optional explicit list of skills to allow (overrides defaults)
 + * @param skillList - Optional explicit list of skills to allow (overrides recommendations)
++ * @param superpowersSkillsDir - Optional configured Lite Superpowers skills root
   * @returns Permission rules for the skill permission type
   */
  export function getSkillPermissionsForAgent(
    agentName: string,
    skillList?: string[],
++  superpowersSkillsDir?: string,
  ): Record<string, 'allow' | 'ask' | 'deny'> {
 -  // Orchestrator gets all skills by default, others are restricted
 -  const permissions: Record<string, 'allow' | 'ask' | 'deny'> = {
 -    '*': agentName === 'orchestrator' ? 'allow' : 'deny',
 -  };
-+  const superpowersPermissions = buildSuperpowersSkillPermissions(agentName);
++  const superpowersSkills = discoverSuperpowersSkillNames(superpowersSkillsDir);
++  const superpowersPermissions = buildSuperpowersSkillPermissions(
++    agentName,
++    superpowersSkills,
++  );
  
 -  // If the user provided an explicit skill list (even empty), honor it
 +  // If the user provided an explicit skill list (even empty), honor it.
@@ -3747,7 +4113,7 @@ index c5ff7d3..7c64d31 100644
      if (isAllowed) {
        permissions[skill.name] = 'allow';
      }
-@@ -70,11 +183,25 @@ export function getSkillPermissionsForAgent(
+@@ -70,11 +190,25 @@ export function getSkillPermissionsForAgent(
    for (const skill of PERMISSION_ONLY_SKILLS) {
      const isAllowed =
        skill.allowedAgents.includes('*') ||
@@ -3776,21 +4142,124 @@ index c5ff7d3..7c64d31 100644
 +}
 diff --git a/src/cli/superpowers-policy.test.ts b/src/cli/superpowers-policy.test.ts
 new file mode 100644
-index 0000000..b78753f
+index 0000000..9c43822
 --- /dev/null
 +++ b/src/cli/superpowers-policy.test.ts
-@@ -0,0 +1,106 @@
-+import { describe, expect, it } from 'bun:test';
+@@ -0,0 +1,241 @@
++import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test';
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
 +import {
-+  FALLBACK_SUPERPOWERS_SKILLS,
 +  buildSuperpowersSkillPermissions,
++  clearSuperpowersSkillDiscoveryCache,
++  discoverSuperpowersSkillNames,
 +  getAllowedSuperpowersSkillsForAgent,
 +  isOrchestratorAgent,
 +} from './superpowers-policy';
 +
++const TEST_SUPERPOWERS_SKILLS = [
++  'brainstorming',
++  'receiving-code-review',
++  'subagent-driven-development',
++  'systematic-debugging',
++  'test-driven-development',
++  'using-superpowers',
++  'verification-before-completion',
++  'writing-plans',
++];
++
++describe('superpowers skill discovery', () => {
++  let skillsRoot: string;
++
++  beforeEach(() => {
++    skillsRoot = mkdtempSync(join(tmpdir(), 'superpowers-lite-skills-'));
++    clearSuperpowersSkillDiscoveryCache();
++  });
++
++  afterEach(() => {
++    rmSync(skillsRoot, { recursive: true, force: true });
++    clearSuperpowersSkillDiscoveryCache();
++  });
++
++  function addSkill(dirName: string, declaredName = dirName): void {
++    const dir = join(skillsRoot, dirName);
++    mkdirSync(dir, { recursive: true });
++    writeFileSync(join(dir, 'SKILL.md'), `---\nname: ${declaredName}\n---\n`);
++  }
++
++  it('returns an empty catalog when the root is omitted', () => {
++    expect(discoverSuperpowersSkillNames()).toEqual([]);
++  });
++
++  it('discovers and sorts Lite skills from the explicit root', () => {
++    addSkill('writing-plans');
++    addSkill('brainstorming');
++    expect(discoverSuperpowersSkillNames(skillsRoot)).toEqual([
++      'brainstorming',
++      'writing-plans',
++    ]);
++  });
++
++  it('deduplicates frontmatter names and returns defensive copies', () => {
++    addSkill('brainstorming-one', 'brainstorming');
++    addSkill('brainstorming-two', 'brainstorming');
++    const catalog = discoverSuperpowersSkillNames(skillsRoot);
++    catalog.push('mutated-result');
++
++    expect(discoverSuperpowersSkillNames(skillsRoot)).toEqual([
++      'brainstorming',
++    ]);
++  });
++
++  it('warns and returns empty for a missing root without stock fallback', () => {
++    const warn = spyOn(console, 'warn').mockImplementation(() => {});
++    expect(discoverSuperpowersSkillNames(join(skillsRoot, 'missing'))).toEqual(
++      [],
++    );
++    expect(warn).toHaveBeenCalledTimes(1);
++    expect(warn.mock.calls[0][0]).toContain(
++      'Superpowers skills directory is unavailable',
++    );
++    warn.mockRestore();
++  });
++
++  it('warns and returns empty when the configured root is not a directory', () => {
++    const filePath = join(skillsRoot, 'not-a-directory');
++    writeFileSync(filePath, 'not a skill root');
++    const warn = spyOn(console, 'warn').mockImplementation(() => {});
++    expect(discoverSuperpowersSkillNames(filePath)).toEqual([]);
++    expect(warn).toHaveBeenCalledTimes(1);
++    expect(warn.mock.calls[0][0]).toContain(
++      'Superpowers skills directory is unreadable',
++    );
++    warn.mockRestore();
++  });
++
++  it('isolates cached catalogs by resolved root', () => {
++    const otherRoot = mkdtempSync(
++      join(tmpdir(), 'superpowers-lite-skills-other-'),
++    );
++    addSkill('brainstorming');
++    mkdirSync(join(otherRoot, 'writing-plans'), { recursive: true });
++    writeFileSync(
++      join(otherRoot, 'writing-plans', 'SKILL.md'),
++      '---\nname: writing-plans\n---\n',
++    );
++    expect(discoverSuperpowersSkillNames(skillsRoot)).toEqual([
++      'brainstorming',
++    ]);
++    expect(discoverSuperpowersSkillNames(otherRoot)).toEqual(['writing-plans']);
++    rmSync(otherRoot, { recursive: true, force: true });
++  });
++});
++
 +describe('superpowers policy', () => {
 +  it('fixer gets TDD + DBG + VBC + RCR (4 skills, RCR added)', () => {
-+    const allowed = getAllowedSuperpowersSkillsForAgent('fixer');
++    const allowed = getAllowedSuperpowersSkillsForAgent(
++      'fixer',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
 +    expect(allowed.has('test-driven-development')).toBe(true);
 +    expect(allowed.has('systematic-debugging')).toBe(true);
@@ -3800,7 +4269,10 @@ index 0000000..b78753f
 +  });
 +
 +  it('designer gets TDD + DBG + VBC + RCR (4 skills, RCR added)', () => {
-+    const allowed = getAllowedSuperpowersSkillsForAgent('designer');
++    const allowed = getAllowedSuperpowersSkillsForAgent(
++      'designer',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
 +    expect(allowed.has('test-driven-development')).toBe(true);
 +    expect(allowed.has('systematic-debugging')).toBe(true);
@@ -3810,7 +4282,10 @@ index 0000000..b78753f
 +  });
 +
 +  it('oracle gets only systematic-debugging in SP allowlist', () => {
-+    const allowed = getAllowedSuperpowersSkillsForAgent('oracle');
++    const allowed = getAllowedSuperpowersSkillsForAgent(
++      'oracle',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
 +    expect(allowed.has('systematic-debugging')).toBe(true);
 +    expect(allowed.has('verification-before-completion')).toBe(false);
@@ -3819,14 +4294,20 @@ index 0000000..b78753f
 +  });
 +
 +  it('oracle-alpha inherits oracle (DBG only)', () => {
-+    const allowed = getAllowedSuperpowersSkillsForAgent('oracle-alpha');
++    const allowed = getAllowedSuperpowersSkillsForAgent(
++      'oracle-alpha',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
 +    expect(allowed.has('systematic-debugging')).toBe(true);
 +    expect(allowed.size).toBe(1);
 +  });
 +
 +  it('grants only systematic-debugging to oracle and hides controller skills', () => {
-+    const permissions = buildSuperpowersSkillPermissions('oracle', FALLBACK_SUPERPOWERS_SKILLS);
++    const permissions = buildSuperpowersSkillPermissions(
++      'oracle',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
 +    expect(permissions['systematic-debugging']).toBe('allow');
 +    expect(permissions['verification-before-completion']).toBe('deny');
@@ -3836,18 +4317,32 @@ index 0000000..b78753f
 +  });
 +
 +  it('keeps using-superpowers bootstrap-only even for orchestrator', () => {
-+    const permissions = buildSuperpowersSkillPermissions('orchestrator', FALLBACK_SUPERPOWERS_SKILLS);
++    const permissions = buildSuperpowersSkillPermissions(
++      'orchestrator',
++      TEST_SUPERPOWERS_SKILLS,
++    );
 +
-+    expect(permissions['brainstorming']).toBe('allow');
++    expect(permissions.brainstorming).toBe('allow');
 +    expect(permissions['writing-plans']).toBe('allow');
 +    expect(permissions['using-superpowers']).toBe('deny');
 +  });
 +
 +  it('fails safe for unknown future superpowers skills', () => {
-+    const futureSkills = [...FALLBACK_SUPERPOWERS_SKILLS, 'future-superpowers-skill'];
++    const futureSkills = [
++      ...TEST_SUPERPOWERS_SKILLS,
++      'future-superpowers-skill',
++    ];
 +
-+    expect(buildSuperpowersSkillPermissions('fixer', futureSkills)['future-superpowers-skill']).toBe('deny');
-+    expect(buildSuperpowersSkillPermissions('orchestrator', futureSkills)['future-superpowers-skill']).toBe('allow');
++    expect(
++      buildSuperpowersSkillPermissions('fixer', futureSkills)[
++        'future-superpowers-skill'
++      ],
++    ).toBe('deny');
++    expect(
++      buildSuperpowersSkillPermissions('orchestrator', futureSkills)[
++        'future-superpowers-skill'
++      ],
++    ).toBe('allow');
 +  });
 +
 +  describe('isOrchestratorAgent()', () => {
@@ -3875,48 +4370,36 @@ index 0000000..b78753f
 +  });
 +
 +  it('grants full superpowers allowlist to orchestrator-prefix variants', () => {
-+    const permissionsBeta = buildSuperpowersSkillPermissions('orchestrator-beta', FALLBACK_SUPERPOWERS_SKILLS);
-+    expect(permissionsBeta['brainstorming']).toBe('allow');
++    const permissionsBeta = buildSuperpowersSkillPermissions(
++      'orchestrator-beta',
++      TEST_SUPERPOWERS_SKILLS,
++    );
++    expect(permissionsBeta.brainstorming).toBe('allow');
 +    expect(permissionsBeta['writing-plans']).toBe('allow');
 +    expect(permissionsBeta['subagent-driven-development']).toBe('allow');
 +    expect(permissionsBeta['using-superpowers']).toBe('deny');
 +
-+    const permissionsX = buildSuperpowersSkillPermissions('orchestrator2', FALLBACK_SUPERPOWERS_SKILLS);
-+    expect(permissionsX['brainstorming']).toBe('allow');
++    const permissionsX = buildSuperpowersSkillPermissions(
++      'orchestrator2',
++      TEST_SUPERPOWERS_SKILLS,
++    );
++    expect(permissionsX.brainstorming).toBe('allow');
 +    expect(permissionsX['writing-plans']).toBe('allow');
 +  });
 +});
 diff --git a/src/cli/superpowers-policy.ts b/src/cli/superpowers-policy.ts
 new file mode 100644
-index 0000000..0cd48d4
+index 0000000..2ce1bd9
 --- /dev/null
 +++ b/src/cli/superpowers-policy.ts
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,187 @@
 +import { existsSync, readdirSync, readFileSync } from 'node:fs';
-+import { homedir } from 'node:os';
-+import { join } from 'node:path';
-+
-+export const FALLBACK_SUPERPOWERS_SKILLS = [
-+  'brainstorming',
-+  'dispatching-parallel-agents',
-+  'executing-plans',
-+  'finishing-a-development-branch',
-+  'receiving-code-review',
-+  'requesting-code-review',
-+  'subagent-driven-development',
-+  'systematic-debugging',
-+  'test-driven-development',
-+  'using-git-worktrees',
-+  'using-superpowers',
-+  'verification-before-completion',
-+  'writing-plans',
-+  'writing-skills',
-+] as const;
++import { join, resolve } from 'node:path';
 +
 +const AGENT_ALLOWED_SUPERPOWERS: Record<string, string[]> = {
-+  orchestrator: FALLBACK_SUPERPOWERS_SKILLS.filter(
-+    (name) => name !== 'using-superpowers',
-+  ),
++  // Base-name marker: orchestrator-shaped variants receive their full catalog
++  // allowance in getAllowedSuperpowersSkillsForAgent, not from this empty list.
++  orchestrator: [],
 +  fixer: [
 +    'test-driven-development',
 +    'systematic-debugging',
@@ -3929,9 +4412,7 @@ index 0000000..0cd48d4
 +    'verification-before-completion',
 +    'receiving-code-review',
 +  ],
-+  oracle: [
-+    'systematic-debugging',
-+  ],
++  oracle: ['systematic-debugging'],
 +  explorer: [],
 +  librarian: [],
 +  observer: [],
@@ -3986,11 +4467,10 @@ index 0000000..0cd48d4
 +  return agentName.startsWith('orchestrator');
 +}
 +
-+let cachedSuperpowersSkills: string[] | null = null;
++const cachedSuperpowersSkills = new Map<string, string[]>();
 +
-+function getOpencodeConfigDir(): string {
-+  const custom = process.env.OPENCODE_CONFIG_DIR?.trim();
-+  return custom || join(homedir(), '.config', 'opencode');
++export function clearSuperpowersSkillDiscoveryCache(): void {
++  cachedSuperpowersSkills.clear();
 +}
 +
 +function extractSkillName(skillDirPath: string, fallbackName: string): string {
@@ -4004,39 +4484,59 @@ index 0000000..0cd48d4
 +  return match?.[1]?.trim() || fallbackName;
 +}
 +
-+export function discoverSuperpowersSkillNames(): string[] {
-+  if (cachedSuperpowersSkills) {
-+    return [...cachedSuperpowersSkills];
++export function discoverSuperpowersSkillNames(skillsRoot?: string): string[] {
++  const configuredRoot = skillsRoot?.trim();
++  if (!configuredRoot) {
++    return [];
 +  }
 +
-+  const skillsRoot = join(getOpencodeConfigDir(), 'superpowers', 'skills');
-+  if (!existsSync(skillsRoot)) {
-+    cachedSuperpowersSkills = [...FALLBACK_SUPERPOWERS_SKILLS];
-+    return [...cachedSuperpowersSkills];
++  const resolvedRoot = resolve(configuredRoot);
++  const cached = cachedSuperpowersSkills.get(resolvedRoot);
++  // Cached empty catalogs intentionally suppress repeated unavailable-root warnings.
++  if (cached) {
++    return [...cached];
 +  }
 +
-+  const discovered = readdirSync(skillsRoot, { withFileTypes: true })
-+    .filter((entry) => entry.isDirectory())
-+    .map((entry) => extractSkillName(join(skillsRoot, entry.name), entry.name))
-+    .filter(Boolean);
++  if (!existsSync(resolvedRoot)) {
++    console.warn(
++      `[oh-my-opencode-slim] Superpowers skills directory is unavailable: ${resolvedRoot}; bridge overlay disabled.`,
++    );
++    cachedSuperpowersSkills.set(resolvedRoot, []);
++    return [];
++  }
 +
-+  cachedSuperpowersSkills = discovered.length
-+    ? [...new Set(discovered)].sort()
-+    : [...FALLBACK_SUPERPOWERS_SKILLS];
-+
-+  return [...cachedSuperpowersSkills];
++  try {
++    const discovered = readdirSync(resolvedRoot, { withFileTypes: true })
++      .filter((entry) => entry.isDirectory())
++      .map((entry) =>
++        extractSkillName(join(resolvedRoot, entry.name), entry.name),
++      )
++      .filter(Boolean);
++    const catalog = [...new Set(discovered)].sort();
++    cachedSuperpowersSkills.set(resolvedRoot, catalog);
++    return [...catalog];
++  } catch (error) {
++    const message = error instanceof Error ? error.message : String(error);
++    console.warn(
++      `[oh-my-opencode-slim] Superpowers skills directory is unreadable: ${resolvedRoot}; bridge overlay disabled. ${message}`,
++    );
++    cachedSuperpowersSkills.set(resolvedRoot, []);
++    return [];
++  }
 +}
 +
 +export function getAllowedSuperpowersSkillsForAgent(
 +  agentName: string,
-+  superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
++  superpowersSkills: readonly string[] = [],
 +): Set<string> {
 +  // Orchestrator-shaped agents (literal "orchestrator", "orchestrator-beta",
 +  // "orchestrator2", etc.) get the full superpowers allowlist so a fallback
 +  // orchestrator can do real orchestration work when the main one is
 +  // rate-limited.
 +  if (isOrchestratorAgent(agentName)) {
-+    return new Set(superpowersSkills.filter((name) => name !== 'using-superpowers'));
++    return new Set(
++      superpowersSkills.filter((name) => name !== 'using-superpowers'),
++    );
 +  }
 +
 +  // Resolve variant suffix names (e.g., "fixer-alpha" -> "fixer") so they
@@ -4061,10 +4561,13 @@ index 0000000..0cd48d4
 +
 +export function buildSuperpowersSkillPermissions(
 +  agentName: string,
-+  superpowersSkills: readonly string[] = discoverSuperpowersSkillNames(),
++  superpowersSkills: readonly string[] = [],
 +): Record<string, 'allow' | 'deny'> {
 +  const permissions: Record<string, 'allow' | 'deny'> = {};
-+  const allowed = getAllowedSuperpowersSkillsForAgent(agentName, superpowersSkills);
++  const allowed = getAllowedSuperpowersSkillsForAgent(
++    agentName,
++    superpowersSkills,
++  );
 +
 +  for (const skill of superpowersSkills) {
 +    if (skill === 'using-superpowers') {
@@ -4119,10 +4622,10 @@ index 3000d4f..1e7b612 100644
 +- Utility integration is visible at runtime through `utils/system-collapse.ts` (system message normalization) and shared utility support (`logger`, `env`, `polling`, `session`, etc.).
 diff --git a/src/config/agent-mcp-blacklist.test.ts b/src/config/agent-mcp-blacklist.test.ts
 new file mode 100644
-index 0000000..1fbcd14
+index 0000000..6e25a11
 --- /dev/null
 +++ b/src/config/agent-mcp-blacklist.test.ts
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,70 @@
 +import { describe, expect, test } from 'bun:test';
 +import { getRestrictedMcpDenies } from './agent-mcp-blacklist';
 +
@@ -4134,7 +4637,6 @@ index 0000000..1fbcd14
 +  test('orchestrator-beta inherits orchestrator (operator)', () => {
 +    expect(getRestrictedMcpDenies('orchestrator-beta')).toEqual([]);
 +  });
-+
 +
 +  test('orchestrator-delta inherits orchestrator (operator)', () => {
 +    expect(getRestrictedMcpDenies('orchestrator-delta')).toEqual([]);
@@ -4194,13 +4696,12 @@ index 0000000..1fbcd14
 +    );
 +  });
 +});
-\ No newline at end of file
 diff --git a/src/config/agent-mcp-blacklist.ts b/src/config/agent-mcp-blacklist.ts
 new file mode 100644
-index 0000000..fe04bf0
+index 0000000..0843551
 --- /dev/null
 +++ b/src/config/agent-mcp-blacklist.ts
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,43 @@
 +import { resolveBaseAgentName } from '../cli/superpowers-policy';
 +
 +/**
@@ -4216,8 +4717,14 @@ index 0000000..fe04bf0
 + */
 +const MCP_OPERATOR_BASES: Record<string, ReadonlyArray<string>> = {
 +  'windows-mcp': ['fixer', 'orchestrator', 'laborer', 'designer'],
-+  'chrome-devtools': ['fixer', 'orchestrator', 'laborer', 'designer', 'librarian'],
-+  'playwright': ['fixer', 'orchestrator', 'laborer', 'designer', 'librarian'],
++  'chrome-devtools': [
++    'fixer',
++    'orchestrator',
++    'laborer',
++    'designer',
++    'librarian',
++  ],
++  playwright: ['fixer', 'orchestrator', 'laborer', 'designer', 'librarian'],
 +};
 +
 +/**
@@ -4238,17 +4745,16 @@ index 0000000..fe04bf0
 +  }
 +  return denies;
 +}
-\ No newline at end of file
 diff --git a/src/config/agent-mcps.test.ts b/src/config/agent-mcps.test.ts
-index 8e6d5df..3bd44c2 100644
+index 8e6d5df..617a7d6 100644
 --- a/src/config/agent-mcps.test.ts
 +++ b/src/config/agent-mcps.test.ts
 @@ -1,5 +1,10 @@
  import { describe, expect, test } from 'bun:test';
 -import { DEFAULT_AGENT_MCPS, parseList } from './agent-mcps';
 +import {
-+  DEFAULT_AGENT_MCPS,
 +  buildAgentMcpPermissionRules,
++  DEFAULT_AGENT_MCPS,
 +  getManagedMcpNames,
 +  parseList,
 +} from './agent-mcps';
@@ -4354,6 +4860,70 @@ index 8ce65d5..ae8de22 100644
 +export { loadAgentPrompt, loadPluginConfig } from './loader';
  export * from './schema';
  export { getAgentOverride, getCustomAgentNames } from './utils';
+diff --git a/src/config/loader.test.ts b/src/config/loader.test.ts
+index 2bc8356..c2cd426 100644
+--- a/src/config/loader.test.ts
++++ b/src/config/loader.test.ts
+@@ -81,7 +81,21 @@ describe('loadPluginConfig', () => {
+     expect(config.balanceProviderUsage).toBe(true);
+   });
+ 
+-  test('loads autoUpdate flag when configured', () => {
++  test('loads superpowersSkillsDir when configured', () => {
++    const projectDir = path.join(tempDir, 'project');
++    const projectConfigDir = path.join(projectDir, '.opencode');
++    fs.mkdirSync(projectConfigDir, { recursive: true });
++    fs.writeFileSync(
++      path.join(projectConfigDir, 'oh-my-opencode-slim.json'),
++      JSON.stringify({ superpowersSkillsDir: 'D:\\superpowers-lite\\skills' }),
++    );
++
++    expect(loadPluginConfig(projectDir).superpowersSkillsDir).toBe(
++      'D:\\superpowers-lite\\skills',
++    );
++  });
++
++  test('strips unsupported autoUpdate flag when configured', () => {
+     const projectDir = path.join(tempDir, 'project');
+     const projectConfigDir = path.join(projectDir, '.opencode');
+     fs.mkdirSync(projectConfigDir, { recursive: true });
+@@ -93,7 +107,7 @@ describe('loadPluginConfig', () => {
+     );
+ 
+     const config = loadPluginConfig(projectDir);
+-    expect(config.autoUpdate).toBe(false);
++    expect(config.autoUpdate).toBeUndefined();
+   });
+ 
+   test('loads manual plan structure when configured', () => {
+@@ -599,6 +613,27 @@ describe('deepMerge behavior', () => {
+     expect(config.disabled_mcps).toEqual(['context7']);
+   });
+ 
++  test('project superpowersSkillsDir overrides the user value', () => {
++    const userOpencodeDir = path.join(userConfigDir, 'opencode');
++    fs.mkdirSync(userOpencodeDir, { recursive: true });
++    fs.writeFileSync(
++      path.join(userOpencodeDir, 'oh-my-opencode-slim.json'),
++      JSON.stringify({ superpowersSkillsDir: 'C:\\user\\skills' }),
++    );
++
++    const projectDir = path.join(tempDir, 'project');
++    const projectConfigDir = path.join(projectDir, '.opencode');
++    fs.mkdirSync(projectConfigDir, { recursive: true });
++    fs.writeFileSync(
++      path.join(projectConfigDir, 'oh-my-opencode-slim.json'),
++      JSON.stringify({ superpowersSkillsDir: 'D:\\project\\skills' }),
++    );
++
++    expect(loadPluginConfig(projectDir).superpowersSkillsDir).toBe(
++      'D:\\project\\skills',
++    );
++  });
++
+   test('handles missing user config gracefully', () => {
+     // Don't create user config, only project
+     const projectDir = path.join(tempDir, 'project');
 diff --git a/src/config/loader.ts b/src/config/loader.ts
 index b7150c9..b69855d 100644
 --- a/src/config/loader.ts
@@ -4369,14 +4939,14 @@ index b7150c9..b69855d 100644
      subtask: deepMerge(base.subtask, override.subtask),
 diff --git a/src/config/orchestrator-only-skills.test.ts b/src/config/orchestrator-only-skills.test.ts
 new file mode 100644
-index 0000000..069b53a
+index 0000000..00b3a25
 --- /dev/null
 +++ b/src/config/orchestrator-only-skills.test.ts
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,48 @@
 +import { describe, expect, test } from 'bun:test';
 +import {
-+  RESERVED_ORCHESTRATOR_ONLY_SKILLS,
 +  isReservedSkillAllowed,
++  RESERVED_ORCHESTRATOR_ONLY_SKILLS,
 +} from './orchestrator-only-skills';
 +
 +describe('RESERVED_ORCHESTRATOR_ONLY_SKILLS', () => {
@@ -4396,7 +4966,6 @@ index 0000000..069b53a
 +  test('orchestrator-beta is allowed', () => {
 +    expect(isReservedSkillAllowed('orchestrator-beta')).toBe(true);
 +  });
-+
 +
 +  test('orchestrator-delta is allowed', () => {
 +    expect(isReservedSkillAllowed('orchestrator-delta')).toBe(true);
@@ -4457,7 +5026,7 @@ index 0000000..63aca92
 +  );
 +}
 diff --git a/src/config/schema.ts b/src/config/schema.ts
-index a252f1a..7e38dde 100644
+index a252f1a..b363cda 100644
 --- a/src/config/schema.ts
 +++ b/src/config/schema.ts
 @@ -181,38 +181,6 @@ export const InterviewConfigSchema = z.object({
@@ -4499,7 +5068,7 @@ index a252f1a..7e38dde 100644
  // Todo continuation configuration
  export const TodoContinuationConfigSchema = z.object({
    maxContinuations: z
-@@ -323,11 +291,11 @@ export const PluginConfigSchema = z
+@@ -323,11 +291,19 @@ export const PluginConfigSchema = z
      setDefaultAgent: z.boolean().optional(),
      scoringEngineVersion: z.enum(['v1', 'v2-shadow', 'v2']).optional(),
      balanceProviderUsage: z.boolean().optional(),
@@ -4510,10 +5079,18 @@ index a252f1a..7e38dde 100644
        .describe(
 -        'Disable automatic installation of plugin updates when false. Defaults to true.',
 +        'Show the startup activation toast when OpenCode starts. Defaults to true.',
++      ),
++    superpowersSkillsDir: z
++      .string()
++      .trim()
++      .min(1)
++      .optional()
++      .describe(
++        'Absolute path to the active Superpowers Lite skills directory. When omitted, the Superpowers bridge overlay is disabled.',
        ),
      manualPlan: ManualPlanSchema.optional(),
      presets: z.record(z.string(), PresetSchema).optional(),
-@@ -349,8 +317,6 @@ export const PluginConfigSchema = z
+@@ -349,8 +325,6 @@ export const PluginConfigSchema = z
      tmux: TmuxConfigSchema.optional(),
      websearch: WebsearchConfigSchema.optional(),
      interview: InterviewConfigSchema.optional(),
@@ -34895,7 +35472,7 @@ index e4f2f19..d7754b7 100644
    if (begin === -1 || end === -1 || begin >= end) {
      throw new Error('Invalid patch format: missing Begin/End markers');
 diff --git a/src/hooks/apply-patch/hook.test.ts b/src/hooks/apply-patch/hook.test.ts
-index 71d7a30..18056dc 100644
+index 71d7a30..a92c827 100644
 --- a/src/hooks/apply-patch/hook.test.ts
 +++ b/src/hooks/apply-patch/hook.test.ts
 @@ -115,74 +115,6 @@ PATCH`,
@@ -34973,46 +35550,113 @@ index 71d7a30..18056dc 100644
    test('rewrites a stale prefix patch and remains applicable', async () => {
      const root = await createTempDir('apply-patch-hook-');
      await writeFixture(
-@@ -679,7 +611,7 @@ garbage
+@@ -458,31 +390,34 @@ garbage
+     expect(output.args.patchText).toBe(patchText);
+   });
+ 
+-  test('blocks internal guard errors before native execution', async () => {
+-    const root = await createTempDir('apply-patch-hook-');
+-    const lockedDir = path.join(root, 'locked');
+-    await mkdir(lockedDir, { recursive: true });
+-    await chmod(lockedDir, 0o000);
+-    const hook = createHook();
+-    const patchText = `*** Begin Patch
++  test.skipIf(process.platform === 'win32')(
++    'blocks internal guard errors before native execution',
++    async () => {
++      const root = await createTempDir('apply-patch-hook-');
++      const lockedDir = path.join(root, 'locked');
++      await mkdir(lockedDir, { recursive: true });
++      await chmod(lockedDir, 0o000);
++      const hook = createHook();
++      const patchText = `*** Begin Patch
+ *** Add File: locked/child.txt
+ +fresh
+ *** End Patch`;
+-    const output = { args: { patchText } };
+-
+-    try {
+-      await expect(
+-        hook['tool.execute.before'](
+-          { tool: 'apply_patch', directory: root },
+-          output,
+-        ),
+-      ).rejects.toThrow('apply_patch internal error:');
+-
+-      expect(output.args.patchText).toBe(patchText);
+-    } finally {
+-      await chmod(lockedDir, 0o755);
+-    }
+-  });
++      const output = { args: { patchText } };
++
++      try {
++        await expect(
++          hook['tool.execute.before'](
++            { tool: 'apply_patch', directory: root },
++            output,
++          ),
++        ).rejects.toThrow('apply_patch internal error:');
++
++        expect(output.args.patchText).toBe(patchText);
++      } finally {
++        await chmod(lockedDir, 0o755);
++      }
++    },
++  );
+ 
+   test('blocks a dangerous indented case as verification', async () => {
+     const root = await createTempDir('apply-patch-hook-');
+@@ -679,7 +614,7 @@ garbage
      );
    });
  
 -  test('passes through sibling-directory targets outside root/worktree before native execution', async () => {
-+  test('aborts early when the patch only targets outside root/worktree', async () => {
++  test('leaves outside-workspace patches unchanged for native OpenCode', async () => {
      const root = await createTempDir('apply-patch-hook-');
      const outside = path.join(path.dirname(root), 'outside.txt');
      await writeFile(outside, 'outside\n', 'utf-8');
-@@ -697,7 +629,9 @@ garbage
-         { tool: 'apply_patch', directory: root },
-         output,
-       ),
--    ).resolves.toBeUndefined();
-+    ).rejects.toThrow(
-+      `apply_patch blocked: patch contains path outside workspace root: ${outside}`,
-+    );
- 
-     expect(output.args.patchText).toBe(patchText);
+@@ -703,6 +638,31 @@ garbage
      expect(await readFile(outside, 'utf-8')).toBe('outside\n');
-@@ -733,7 +667,7 @@ garbage
+   });
+ 
++  test('leaves absolute outside-workspace patches unchanged for native OpenCode', async () => {
++    const root = await createTempDir('apply-patch-hook-');
++    const outsideRoot = await createTempDir('apply-patch-hook-outside-');
++    const outside = path.join(outsideRoot, 'outside.txt');
++    await writeFile(outside, 'outside\n', 'utf-8');
++    const hook = createHook();
++    const patchText = `*** Begin Patch
++*** Update File: ${outside}
++@@
++-outside
+++changed
++*** End Patch`;
++    const output = { args: { patchText } };
++
++    await expect(
++      hook['tool.execute.before'](
++        { tool: 'apply_patch', directory: root },
++        output,
++      ),
++    ).resolves.toBeUndefined();
++
++    expect(output.args.patchText).toBe(patchText);
++    expect(await readFile(outside, 'utf-8')).toBe('outside\n');
++  });
++
+   test('normalizes an absolute path inside worktree even when it is outside root', async () => {
+     const worktree = await createTempDir('apply-patch-worktree-');
+     const root = path.join(worktree, 'subdir');
+@@ -733,7 +693,7 @@ garbage
      });
    });
  
 -  test('passes through mixed patches with outside paths without partial rewrite', async () => {
-+  test('aborts early and applies nothing when a mixed patch has outside paths', async () => {
++  test('leaves mixed outside-workspace patches unchanged for native OpenCode', async () => {
      const root = await createTempDir('apply-patch-hook-');
      const outsideDir = await createTempDir('apply-patch-hook-outside-');
      await writeFixture(root, 'sample.txt', 'prefix\nstale-value\nsuffix\n');
-@@ -758,7 +692,9 @@ garbage
-         { tool: 'apply_patch', directory: root },
-         output,
-       ),
--    ).resolves.toBeUndefined();
-+    ).rejects.toThrow(
-+      `apply_patch blocked: patch contains path outside workspace root: ${outsideAdded}`,
-+    );
- 
-     expect(output.args.patchText).toBe(patchText);
-     expect(await readFile(path.join(root, 'sample.txt'), 'utf-8')).toBe(
 diff --git a/src/hooks/apply-patch/matching.test.ts b/src/hooks/apply-patch/matching.test.ts
 index bec899e..528c021 100644
 --- a/src/hooks/apply-patch/matching.test.ts
@@ -35474,10 +36118,54 @@ index d8d0fe6..9298394 100644
      if (countLcsUpperBound(old_lines, window) < needed) {
        continue;
 diff --git a/src/hooks/apply-patch/operations.test.ts b/src/hooks/apply-patch/operations.test.ts
-index 3a9721c..ade46c5 100644
+index 3a9721c..d5f03b6 100644
 --- a/src/hooks/apply-patch/operations.test.ts
 +++ b/src/hooks/apply-patch/operations.test.ts
-@@ -67,6 +67,8 @@ describe('apply-patch/operations', () => {
+@@ -26,7 +26,6 @@ describe('apply-patch/operations', () => {
+   test('preparePatchChanges and applyPreparedChanges apply an exact match', async () => {
+     const root = await createTempDir();
+     await writeFixture(root, 'sample.txt', 'alpha\nbeta\ngamma\n');
+-    await chmod(path.join(root, 'sample.txt'), 0o750);
+ 
+     await applyPatch(
+       root,
+@@ -41,11 +40,32 @@ describe('apply-patch/operations', () => {
+     );
+ 
+     expect(await readText(root, 'sample.txt')).toBe('alpha\nBETA\ngamma\n');
+-    expect((await stat(path.join(root, 'sample.txt'))).mode & 0o777).toBe(
+-      0o750,
+-    );
+   });
+ 
++  test.skipIf(process.platform === 'win32')(
++    'preserves the source mode for an exact match',
++    async () => {
++      const root = await createTempDir();
++      const target = path.join(root, 'sample.txt');
++      await writeFixture(root, 'sample.txt', 'alpha\nbeta\ngamma\n');
++      await chmod(target, 0o750);
++
++      await applyPatch(
++        root,
++        `*** Begin Patch
++*** Update File: sample.txt
++@@
++ alpha
++-beta
+++BETA
++ gamma
++*** End Patch`,
++      );
++
++      expect((await stat(target)).mode & 0o777).toBe(0o750);
++    },
++  );
++
+   test('rewritePatchText leaves a healthy patch intact', async () => {
+     const root = await createTempDir();
+     const patchText = `*** Begin Patch
+@@ -67,6 +87,8 @@ describe('apply-patch/operations', () => {
      expect(await rewritePatch(root, patchText, DEFAULT_OPTIONS)).toMatchObject({
        patchText,
        changed: false,
@@ -35486,7 +36174,7 @@ index 3a9721c..ade46c5 100644
      });
    });
  
-@@ -94,6 +96,8 @@ PATCH`;
+@@ -94,6 +116,8 @@ PATCH`;
      expect(await rewritePatch(root, patchText, DEFAULT_OPTIONS)).toMatchObject({
        patchText: cleanPatchText,
        changed: true,
@@ -35495,7 +36183,7 @@ index 3a9721c..ade46c5 100644
      });
    });
  
-@@ -366,6 +370,7 @@ garbage
+@@ -366,6 +390,7 @@ garbage
      );
  
      expect(rewritten.changed).toBeTrue();
@@ -35503,7 +36191,7 @@ index 3a9721c..ade46c5 100644
      const [rewrittenHunk] = parsePatch(rewritten.patchText).hunks;
      expect(rewrittenHunk.type).toBe('update');
      expect(rewrittenHunk.path).toBe('sample.txt');
-@@ -809,6 +814,7 @@ garbage
+@@ -809,6 +834,7 @@ garbage
  
      const rewritten = parsePatch(result.patchText);
      expect(result.changed).toBeTrue();
@@ -35511,7 +36199,7 @@ index 3a9721c..ade46c5 100644
      expect(rewritten.hunks).toHaveLength(1);
      expect(rewritten.hunks[0]).toEqual({
        type: 'update',
-@@ -898,6 +904,7 @@ garbage
+@@ -898,6 +924,7 @@ garbage
      );
  
      expect(result.changed).toBeTrue();
@@ -35519,7 +36207,7 @@ index 3a9721c..ade46c5 100644
      expect(parsePatch(result.patchText).hunks).toEqual([
        {
          type: 'add',
-@@ -927,6 +934,7 @@ garbage
+@@ -927,6 +954,7 @@ garbage
      );
  
      expect(result.changed).toBeTrue();
@@ -35527,7 +36215,7 @@ index 3a9721c..ade46c5 100644
      expect(parsePatch(result.patchText).hunks).toEqual([
        {
          type: 'add',
-@@ -961,6 +969,7 @@ garbage
+@@ -961,6 +989,7 @@ garbage
      );
  
      expect(result.changed).toBeTrue();
@@ -35535,7 +36223,7 @@ index 3a9721c..ade46c5 100644
      expect(parsePatch(result.patchText).hunks).toEqual([
        {
          type: 'update',
-@@ -1002,6 +1011,7 @@ garbage
+@@ -1002,6 +1031,7 @@ garbage
      );
  
      expect(result.changed).toBeTrue();
@@ -35543,6 +36231,102 @@ index 3a9721c..ade46c5 100644
      expect(parsePatch(result.patchText).hunks).toEqual([
        {
          type: 'update',
+@@ -1101,7 +1131,6 @@ garbage
+     const root = await createTempDir();
+     await writeFixture(root, 'first.txt', 'one\n');
+     await writeFixture(root, 'blocker', 'not-a-dir\n');
+-    await chmod(path.join(root, 'first.txt'), 0o755);
+ 
+     await expect(
+       applyPreparedChanges([
+@@ -1121,15 +1150,39 @@ garbage
+     );
+ 
+     expect(await readText(root, 'first.txt')).toBe('one\n');
+-    expect((await stat(path.join(root, 'first.txt'))).mode & 0o777).toBe(0o755);
+     expect(await readText(root, 'blocker')).toBe('not-a-dir\n');
+     await expect(readText(root, 'blocker/second.txt')).rejects.toThrow();
+   });
+ 
+-  test('applyPreparedChanges supports update with move_path and preserves the source mode', async () => {
++  test.skipIf(process.platform === 'win32')(
++    'preserves the source mode when a later prepared change fails',
++    async () => {
++      const root = await createTempDir();
++      const source = path.join(root, 'first.txt');
++      await writeFixture(root, 'first.txt', 'one\n');
++      await writeFixture(root, 'blocker', 'not-a-dir\n');
++      await chmod(source, 0o755);
++
++      await expect(
++        applyPreparedChanges([
++          { type: 'update', file: source, text: 'ONE\n' },
++          {
++            type: 'add',
++            file: path.join(root, 'blocker', 'second.txt'),
++            text: 'two\n',
++          },
++        ]),
++      ).rejects.toThrow(
++        'apply_patch internal error: Failed to apply prepared changes',
++      );
++
++      expect((await stat(source)).mode & 0o777).toBe(0o755);
++    },
++  );
++
++  test('applyPreparedChanges supports update with move_path', async () => {
+     const root = await createTempDir();
+     await writeFixture(root, 'before.txt', 'alpha\nbeta\ngamma\n');
+-    await chmod(path.join(root, 'before.txt'), 0o755);
+ 
+     const changes = await preparePatchChanges(
+       root,
+@@ -1149,9 +1202,6 @@ garbage
+     expect(await readText(root, 'nested/after.txt')).toBe(
+       'alpha\nBETA\ngamma\n',
+     );
+-    expect((await stat(path.join(root, 'nested/after.txt'))).mode & 0o777).toBe(
+-      0o755,
+-    );
+     await expect(readText(root, 'before.txt')).rejects.toThrow();
+     expect(changes[0]).toMatchObject({
+       type: 'update',
+@@ -1160,6 +1210,34 @@ garbage
+     });
+   });
+ 
++  test.skipIf(process.platform === 'win32')(
++    'preserves the source mode for an update with move_path',
++    async () => {
++      const root = await createTempDir();
++      const source = path.join(root, 'before.txt');
++      const target = path.join(root, 'nested/after.txt');
++      await writeFixture(root, 'before.txt', 'alpha\nbeta\ngamma\n');
++      await chmod(source, 0o755);
++
++      const changes = await preparePatchChanges(
++        root,
++        `*** Begin Patch
++*** Update File: before.txt
++*** Move to: nested/after.txt
++@@
++ alpha
++-beta
+++BETA
++ gamma
++*** End Patch`,
++        DEFAULT_OPTIONS,
++      );
++      await applyPreparedChanges(changes);
++
++      expect((await stat(target)).mode & 0o777).toBe(0o755);
++    },
++  );
++
+   test('applyPreparedChanges rejects direct update on a missing source', async () => {
+     const root = await createTempDir();
+     const target = path.join(root, 'missing.txt');
 diff --git a/src/hooks/apply-patch/resolution.test.ts b/src/hooks/apply-patch/resolution.test.ts
 index 7307367..1fc6bd5 100644
 --- a/src/hooks/apply-patch/resolution.test.ts
@@ -35804,6 +36588,348 @@ index 7f36db3..4d849cd 100644
      };
    } catch (error) {
      throw ensureApplyPatchError(error, 'Unexpected rewrite failure');
+diff --git a/src/hooks/auto-update-checker/cache.test.ts b/src/hooks/auto-update-checker/cache.test.ts
+index 95d3f45..899bbde 100644
+--- a/src/hooks/auto-update-checker/cache.test.ts
++++ b/src/hooks/auto-update-checker/cache.test.ts
+@@ -1,5 +1,7 @@
+ import { describe, expect, mock, spyOn, test } from 'bun:test';
+ import * as fs from 'node:fs';
++import path from 'node:path';
++import { CACHE_DIR } from './constants';
+ 
+ // Mock logger to avoid noise
+ mock.module('../../utils/logger', () => ({
+@@ -16,76 +18,81 @@ mock.module('../../cli/config-manager', () => ({
+ 
+ // Cache buster for dynamic imports
+ let importCounter = 0;
++const packageInstallDir = path.join(
++  '/home',
++  'user',
++  '.cache',
++  'opencode',
++  'packages',
++  'oh-my-opencode-slim@latest',
++);
++const packageJsonPath = path.join(packageInstallDir, 'package.json');
++const runtimePackageJsonPath = path.join(
++  packageInstallDir,
++  'node_modules',
++  'oh-my-opencode-slim',
++  'package.json',
++);
++const installedPackagePath = path.join(
++  packageInstallDir,
++  'node_modules',
++  'oh-my-opencode-slim',
++);
+ 
+ describe('auto-update-checker/cache', () => {
+   describe('resolveInstallContext', () => {
+     test('detects OpenCode packages install root from runtime package path', async () => {
+       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
+-        (p: string) =>
+-          p ===
+-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json',
+-      );
+-      const { resolveInstallContext } = await import(
+-        `./cache?test=${importCounter++}`
+-      );
+-
+-      const context = resolveInstallContext(
+-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+-      );
+-
+-      expect(context).toEqual({
+-        installDir:
+-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest',
+-        packageJsonPath:
+-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json',
+-      });
+-
+-      existsSpy.mockRestore();
++        (p: string) => p === packageJsonPath,
++      );
++      try {
++        const { resolveInstallContext } = await import(
++          `./cache?test=${importCounter++}`
++        );
++        const context = resolveInstallContext(runtimePackageJsonPath);
++
++        expect(context).toEqual({
++          installDir: packageInstallDir,
++          packageJsonPath,
++        });
++      } finally {
++        existsSpy.mockRestore();
++      }
+     });
+ 
+     test('does not fall back to legacy cache when runtime path is active but wrapper root is invalid', async () => {
+       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(() => false);
+-      const { resolveInstallContext } = await import(
+-        `./cache?test=${importCounter++}`
+-      );
+-
+-      const context = resolveInstallContext(
+-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+-      );
+-
+-      expect(context).toBeNull();
+-
+-      existsSpy.mockRestore();
++      try {
++        const { resolveInstallContext } = await import(
++          `./cache?test=${importCounter++}`
++        );
++        expect(resolveInstallContext(runtimePackageJsonPath)).toBeNull();
++      } finally {
++        existsSpy.mockRestore();
++      }
+     });
+   });
+ 
+   describe('preparePackageUpdate', () => {
+     test('returns null when no install context is available', async () => {
+       const existsSpy = spyOn(fs, 'existsSync').mockReturnValue(false);
+-      const { preparePackageUpdate } = await import(
+-        `./cache?test=${importCounter++}`
+-      );
+-
+-      const result = preparePackageUpdate('1.0.1');
+-      expect(result).toBeNull();
+-
+-      existsSpy.mockRestore();
++      try {
++        const { preparePackageUpdate } = await import(
++          `./cache?test=${importCounter++}`
++        );
++        expect(preparePackageUpdate('1.0.1')).toBeNull();
++      } finally {
++        existsSpy.mockRestore();
++      }
+     });
+ 
+     test('updates packages wrapper dependency and removes installed package', async () => {
+       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
+-        (p: string) =>
+-          p ===
+-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json' ||
+-          p ===
+-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim',
++        (p: string) => p === packageJsonPath || p === installedPackagePath,
+       );
+       const readSpy = spyOn(fs, 'readFileSync').mockImplementation(
+         (p: string) => {
+-          if (
+-            p ===
+-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json'
+-          ) {
++          if (p === packageJsonPath) {
+             return JSON.stringify({
+               dependencies: {
+                 'oh-my-opencode-slim': '0.9.1',
+@@ -102,41 +109,40 @@ describe('auto-update-checker/cache', () => {
+         },
+       );
+       const rmSyncSpy = spyOn(fs, 'rmSync').mockReturnValue(undefined);
+-      const { preparePackageUpdate } = await import(
+-        `./cache?test=${importCounter++}`
+-      );
+-
+-      const result = preparePackageUpdate(
+-        '0.9.11',
+-        'oh-my-opencode-slim',
+-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+-      );
+-
+-      expect(result).toBe(
+-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest',
+-      );
+-      expect(rmSyncSpy).toHaveBeenCalledWith(
+-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim',
+-        { recursive: true, force: true },
+-      );
+-      expect(writtenData.length).toBeGreaterThan(0);
+-      expect(JSON.parse(writtenData[0])).toEqual({
+-        dependencies: {
+-          'oh-my-opencode-slim': '0.9.11',
+-        },
+-      });
+-
+-      existsSpy.mockRestore();
+-      readSpy.mockRestore();
+-      writeSpy.mockRestore();
+-      rmSyncSpy.mockRestore();
++      try {
++        const { preparePackageUpdate } = await import(
++          `./cache?test=${importCounter++}`
++        );
++        const result = preparePackageUpdate(
++          '0.9.11',
++          'oh-my-opencode-slim',
++          runtimePackageJsonPath,
++        );
++
++        expect(result).toBe(packageInstallDir);
++        expect(rmSyncSpy).toHaveBeenCalledWith(installedPackagePath, {
++          recursive: true,
++          force: true,
++        });
++        expect(writtenData.length).toBeGreaterThan(0);
++        expect(JSON.parse(writtenData[0])).toEqual({
++          dependencies: {
++            'oh-my-opencode-slim': '0.9.11',
++          },
++        });
++      } finally {
++        existsSpy.mockRestore();
++        readSpy.mockRestore();
++        writeSpy.mockRestore();
++        rmSyncSpy.mockRestore();
++      }
+     });
+ 
+     test('keeps working when dependency is already on target version', async () => {
+       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
+         (p: string) =>
+-          p.endsWith('/.cache/opencode/package.json') ||
+-          p.endsWith('/.cache/opencode/node_modules/oh-my-opencode-slim'),
++          p === path.join(CACHE_DIR, 'package.json') ||
++          p === path.join(CACHE_DIR, 'node_modules', 'oh-my-opencode-slim'),
+       );
+       const readSpy = spyOn(fs, 'readFileSync').mockReturnValue(
+         JSON.stringify({
+@@ -147,20 +153,25 @@ describe('auto-update-checker/cache', () => {
+       );
+       const writeSpy = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+       const rmSyncSpy = spyOn(fs, 'rmSync').mockReturnValue(undefined);
+-      const { preparePackageUpdate } = await import(
+-        `./cache?test=${importCounter++}`
+-      );
+-
+-      const result = preparePackageUpdate('1.0.1', 'oh-my-opencode-slim', null);
+-
+-      expect(result?.endsWith('/.cache/opencode')).toBe(true);
+-      expect(writeSpy).not.toHaveBeenCalled();
+-      expect(rmSyncSpy).toHaveBeenCalled();
+-
+-      existsSpy.mockRestore();
+-      readSpy.mockRestore();
+-      writeSpy.mockRestore();
+-      rmSyncSpy.mockRestore();
++      try {
++        const { preparePackageUpdate } = await import(
++          `./cache?test=${importCounter++}`
++        );
++        const result = preparePackageUpdate(
++          '1.0.1',
++          'oh-my-opencode-slim',
++          null,
++        );
++
++        expect(result).toBe(CACHE_DIR);
++        expect(writeSpy).not.toHaveBeenCalled();
++        expect(rmSyncSpy).toHaveBeenCalled();
++      } finally {
++        existsSpy.mockRestore();
++        readSpy.mockRestore();
++        writeSpy.mockRestore();
++        rmSyncSpy.mockRestore();
++      }
+     });
+   });
+ });
+diff --git a/src/hooks/auto-update-checker/index.test.ts b/src/hooks/auto-update-checker/index.test.ts
+index bb5ae6c..d9bc7c6 100644
+--- a/src/hooks/auto-update-checker/index.test.ts
++++ b/src/hooks/auto-update-checker/index.test.ts
+@@ -136,7 +136,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(logMock);
+ 
+@@ -171,7 +173,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
+@@ -212,6 +216,7 @@ describe('auto-update-checker/index', () => {
+ 
+     const hook = createAutoUpdateCheckerHook(ctx as never, {
+       autoUpdate: false,
++      showStartupToast: false,
+     });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+@@ -246,7 +251,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
+@@ -288,7 +295,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
+@@ -324,7 +333,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
+@@ -358,7 +369,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
+@@ -390,7 +403,9 @@ describe('auto-update-checker/index', () => {
+     );
+     const { ctx, showToast } = createCtx();
+ 
+-    const hook = createAutoUpdateCheckerHook(ctx as never);
++    const hook = createAutoUpdateCheckerHook(ctx as never, {
++      showStartupToast: false,
++    });
+     hook.event({ event: { type: 'session.created', properties: {} } });
+     await waitForCalls(showToast);
+ 
 diff --git a/src/hooks/auto-update-checker/index.ts b/src/hooks/auto-update-checker/index.ts
 index 88d7df3..c902ec4 100644
 --- a/src/hooks/auto-update-checker/index.ts
@@ -36038,10 +37164,10 @@ index c4d07fd..71d115b 100644
  - The `src/hooks/*/codemap.md` files document each feature internals.
 diff --git a/src/hooks/cost-observatory-starter/index.ts b/src/hooks/cost-observatory-starter/index.ts
 new file mode 100644
-index 0000000..d0a8f5b
+index 0000000..bd8dcc0
 --- /dev/null
 +++ b/src/hooks/cost-observatory-starter/index.ts
-@@ -0,0 +1,95 @@
+@@ -0,0 +1,127 @@
 +import fs from 'node:fs';
 +import path from 'node:path';
 +import type { PluginInput } from '@opencode-ai/plugin';
@@ -36058,10 +37184,21 @@ index 0000000..d0a8f5b
 +  let hasStarted = false;
 +
 +  async function probeStatus() {
-+    const status = crossSpawn(['pwsh', '-NoLogo', '-NoProfile', '-NonInteractive', '-File', BOOTSTRAP_PATH, 'status'], {
-+      stdout: 'pipe',
-+      stderr: 'pipe',
-+    });
++    const status = crossSpawn(
++      [
++        'pwsh',
++        '-NoLogo',
++        '-NoProfile',
++        '-NonInteractive',
++        '-File',
++        BOOTSTRAP_PATH,
++        'status',
++      ],
++      {
++        stdout: 'pipe',
++        stderr: 'pipe',
++      },
++    );
 +    const exitCode = await status.exited;
 +    const stdout = (await status.stdout()).trim();
 +    return exitCode === 0 ? stdout : 'stopped';
@@ -36081,12 +37218,16 @@ index 0000000..d0a8f5b
 +    if (hasStarted) return;
 +
 +    if (!fs.existsSync(BOOTSTRAP_PATH)) {
-+      log('[cost-observatory-starter] bootstrap script missing', { path: BOOTSTRAP_PATH });
++      log('[cost-observatory-starter] bootstrap script missing', {
++        path: BOOTSTRAP_PATH,
++      });
 +      return;
 +    }
 +
 +    if (hasFreshMarker()) {
-+      log('[cost-observatory-starter] wrapper startup already requested recently');
++      log(
++        '[cost-observatory-starter] wrapper startup already requested recently',
++      );
 +      return;
 +    }
 +
@@ -36094,7 +37235,9 @@ index 0000000..d0a8f5b
 +      const stdout = await probeStatus();
 +      if (stdout && stdout !== 'stopped') {
 +        hasStarted = true;
-+        log('[cost-observatory-starter] backend already running', { pid: stdout });
++        log('[cost-observatory-starter] backend already running', {
++          pid: stdout,
++        });
 +        return;
 +      }
 +    } catch (error) {
@@ -36102,10 +37245,21 @@ index 0000000..d0a8f5b
 +    }
 +
 +    try {
-+      crossSpawn(['pwsh', '-NoLogo', '-NoProfile', '-NonInteractive', '-File', BOOTSTRAP_PATH, 'start'], {
-+        stdout: 'ignore',
-+        stderr: 'ignore',
-+      });
++      crossSpawn(
++        [
++          'pwsh',
++          '-NoLogo',
++          '-NoProfile',
++          '-NonInteractive',
++          '-File',
++          BOOTSTRAP_PATH,
++          'start',
++        ],
++        {
++          stdout: 'ignore',
++          stderr: 'ignore',
++        },
++      );
 +      log('[cost-observatory-starter] backend start requested');
 +    } catch (error) {
 +      log('[cost-observatory-starter] backend start request failed', error);
@@ -36117,7 +37271,9 @@ index 0000000..d0a8f5b
 +        const stdout = await probeStatus();
 +        if (stdout && stdout !== 'stopped') {
 +          hasStarted = true;
-+          log('[cost-observatory-starter] backend confirmed running', { pid: stdout });
++          log('[cost-observatory-starter] backend confirmed running', {
++            pid: stdout,
++          });
 +        }
 +      } catch (error) {
 +        log('[cost-observatory-starter] delayed status probe failed', error);
@@ -36129,7 +37285,9 @@ index 0000000..d0a8f5b
 +    maybeStart,
 +    event: ({ event }: { event: { type: string; properties?: unknown } }) => {
 +      if (event.type !== 'session.created') return;
-+      const props = event.properties as { info?: { parentID?: string } } | undefined;
++      const props = event.properties as
++        | { info?: { parentID?: string } }
++        | undefined;
 +      if (props?.info?.parentID) return;
 +      setTimeout(() => {
 +        void maybeStart();
@@ -36138,10 +37296,97 @@ index 0000000..d0a8f5b
 +  };
 +}
 diff --git a/src/hooks/filter-available-skills/index.test.ts b/src/hooks/filter-available-skills/index.test.ts
-index 62a3cfa..a61f31a 100644
+index 62a3cfa..7d44962 100644
 --- a/src/hooks/filter-available-skills/index.test.ts
 +++ b/src/hooks/filter-available-skills/index.test.ts
-@@ -231,66 +231,4 @@ describe('createFilterAvailableSkillsHook', () => {
+@@ -1,5 +1,9 @@
+-import { describe, expect, test } from 'bun:test';
++import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
++import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join } from 'node:path';
+ import type { PluginInput } from '@opencode-ai/plugin';
++import { clearSuperpowersSkillDiscoveryCache } from '../../cli/superpowers-policy';
+ import type { PluginConfig } from '../../config';
+ import {
+   createFilterAvailableSkillsHook,
+@@ -8,6 +12,35 @@ import {
+ 
+ const mockCtx = {} as PluginInput;
+ 
++const SUPERPOWERS_TEST_SKILLS = [
++  'brainstorming',
++  'receiving-code-review',
++  'requesting-code-review',
++  'subagent-driven-development',
++  'systematic-debugging',
++  'test-driven-development',
++  'using-superpowers',
++  'verification-before-completion',
++  'writing-plans',
++];
++
++let skillsRoot: string;
++
++beforeEach(() => {
++  skillsRoot = mkdtempSync(join(tmpdir(), 'omo-lite-policy-'));
++  for (const name of SUPERPOWERS_TEST_SKILLS) {
++    const dir = join(skillsRoot, name);
++    mkdirSync(dir, { recursive: true });
++    writeFileSync(join(dir, 'SKILL.md'), `---\nname: ${name}\n---\n`);
++  }
++  clearSuperpowersSkillDiscoveryCache();
++});
++
++afterEach(() => {
++  rmSync(skillsRoot, { recursive: true, force: true });
++  clearSuperpowersSkillDiscoveryCache();
++});
++
+ function skillBlock(name: string): string {
+   return `<skill>
+   <name>${name}</name>
+@@ -137,6 +170,39 @@ describe('createFilterAvailableSkillsHook', () => {
+     expect(resultText).toContain('<name>skill2</name>');
+   });
+ 
++  test('filters the configured Superpowers catalog for orchestrator prompts', async () => {
++    const config: PluginConfig = { superpowersSkillsDir: skillsRoot };
++    const hook = createFilterAvailableSkillsHook(mockCtx, config);
++    const output = {
++      messages: [
++        {
++          info: { role: 'system' },
++          parts: [
++            {
++              type: 'text',
++              text: availableSkillsBlock(
++                'brainstorming',
++                'writing-plans',
++                'using-superpowers',
++              ),
++            },
++          ],
++        },
++        {
++          info: { role: 'user', agent: 'orchestrator' },
++          parts: [{ type: 'text', text: 'check skills' }],
++        },
++      ],
++    };
++
++    await hook['experimental.chat.messages.transform']({}, output);
++
++    const resultText = output.messages[0].parts[0].text;
++    expect(resultText).toContain('<name>brainstorming</name>');
++    expect(resultText).toContain('<name>writing-plans</name>');
++    expect(resultText).not.toContain('<name>using-superpowers</name>');
++  });
++
+   test('supports wildcard allow with explicit exclusions', async () => {
+     const config: PluginConfig = {
+       agents: {
+@@ -231,66 +297,4 @@ describe('createFilterAvailableSkillsHook', () => {
      );
      expect(output.messages[1].parts[0].text).toContain('No skills available.');
    });
@@ -36209,7 +37454,7 @@ index 62a3cfa..a61f31a 100644
 -  });
  });
 diff --git a/src/hooks/filter-available-skills/index.ts b/src/hooks/filter-available-skills/index.ts
-index d735b64..98f935c 100644
+index d735b64..2e87508 100644
 --- a/src/hooks/filter-available-skills/index.ts
 +++ b/src/hooks/filter-available-skills/index.ts
 @@ -107,23 +107,6 @@ export function createFilterAvailableSkillsHook(
@@ -36236,7 +37481,7 @@ index d735b64..98f935c 100644
    return {
      'experimental.chat.messages.transform': async (
        _input: Record<string, never>,
-@@ -135,7 +118,11 @@ export function createFilterAvailableSkillsHook(
+@@ -135,7 +118,12 @@ export function createFilterAvailableSkillsHook(
        }
  
        const agentName = getCurrentAgent(messages);
@@ -36245,6 +37490,7 @@ index d735b64..98f935c 100644
 +      const permissionRules = getSkillPermissionsForAgent(
 +        agentName,
 +        configuredSkills,
++        config.superpowersSkillsDir,
 +      );
  
        for (const message of messages) {
@@ -36361,12 +37607,18 @@ index 5f601fd..37d5595 100644
 +  routing, sees the pivoted identity.
 diff --git a/src/hooks/foreground-fallback/cooldowns.test.ts b/src/hooks/foreground-fallback/cooldowns.test.ts
 new file mode 100644
-index 0000000..5ff968c
+index 0000000..0443346
 --- /dev/null
 +++ b/src/hooks/foreground-fallback/cooldowns.test.ts
-@@ -0,0 +1,177 @@
+@@ -0,0 +1,215 @@
 +import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import {
++  existsSync,
++  mkdtempSync,
++  readFileSync,
++  rmSync,
++  writeFileSync,
++} from 'node:fs';
 +import { tmpdir } from 'node:os';
 +import { join } from 'node:path';
 +import { createCooldownStore, parseAnthropicCooldown } from './cooldowns';
@@ -36381,7 +37633,9 @@ index 0000000..5ff968c
 +  });
 +
 +  test('returns null when no recognizable reset header is present', () => {
-+    expect(parseAnthropicCooldown({ 'x-rate-limit-reset': '2026-05-05T15:00:00Z' })).toBeNull();
++    expect(
++      parseAnthropicCooldown({ 'x-rate-limit-reset': '2026-05-05T15:00:00Z' }),
++    ).toBeNull();
 +    expect(parseAnthropicCooldown({})).toBeNull();
 +  });
 +
@@ -36449,13 +37703,19 @@ index 0000000..5ff968c
 +  });
 +
 +  test('starts empty when file does not exist', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    expect(store.snapshot()).toEqual({});
 +    expect(store.isCoolingDown('any/model')).toBe(false);
 +  });
 +
 +  test('set persists immediately', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    const future = now + 60_000;
 +    store.set('anthropic/claude-opus-4-7', future);
 +    expect(existsSync(storePath)).toBe(true);
@@ -36464,13 +37724,19 @@ index 0000000..5ff968c
 +  });
 +
 +  test('isCoolingDown returns true while cooldown is active', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    store.set('anthropic/claude-opus-4-7', now + 60_000);
 +    expect(store.isCoolingDown('anthropic/claude-opus-4-7')).toBe(true);
 +  });
 +
 +  test('isCoolingDown returns false after expiry and clears the entry', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    store.set('anthropic/claude-opus-4-7', now + 60_000);
 +    advanceClock(120_000);
 +    expect(store.isCoolingDown('anthropic/claude-opus-4-7')).toBe(false);
@@ -36478,13 +37744,19 @@ index 0000000..5ff968c
 +  });
 +
 +  test('set ignores reset times in the past', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    store.set('anthropic/claude-opus-4-7', now - 1);
 +    expect(store.snapshot()).toEqual({});
 +  });
 +
 +  test('set keeps the latest cooldown when called twice', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    store.set('anthropic/claude-opus-4-7', now + 30_000);
 +    store.set('anthropic/claude-opus-4-7', now + 90_000);
 +    expect(store.snapshot()['anthropic/claude-opus-4-7']).toBe(now + 90_000);
@@ -36506,7 +37778,10 @@ index 0000000..5ff968c
 +  });
 +
 +  test('purgeExpired removes elapsed entries and persists', () => {
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    const m1Reset = now + 30_000;
 +    const m2Reset = now + 600_000;
 +    store.set('a/m1', m1Reset);
@@ -36515,13 +37790,19 @@ index 0000000..5ff968c
 +    store.purgeExpired();
 +    expect(store.snapshot()).toEqual({ 'b/m2': m2Reset });
 +    // Re-load from disk to confirm persistence
-+    const reloaded = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const reloaded = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    expect(Object.keys(reloaded.snapshot())).toEqual(['b/m2']);
 +  });
 +
 +  test('handles corrupt JSON file gracefully', () => {
 +    writeFileSync(storePath, '{not valid json', 'utf8');
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    expect(store.snapshot()).toEqual({});
 +    // Subsequent set() works normally
 +    store.set('a/m', now + 60_000);
@@ -36538,7 +37819,10 @@ index 0000000..5ff968c
 +      }),
 +      'utf8',
 +    );
-+    const store = createCooldownStore({ filePath: storePath, nowFn: () => now });
++    const store = createCooldownStore({
++      filePath: storePath,
++      nowFn: () => now,
++    });
 +    expect(Object.keys(store.snapshot())).toEqual(['good/model']);
 +  });
 +});
@@ -36768,7 +38052,7 @@ index 0000000..e349cd5
 +  };
 +}
 diff --git a/src/hooks/foreground-fallback/index.test.ts b/src/hooks/foreground-fallback/index.test.ts
-index 3113133..eb85db3 100644
+index 3113133..340c72d 100644
 --- a/src/hooks/foreground-fallback/index.test.ts
 +++ b/src/hooks/foreground-fallback/index.test.ts
 @@ -1,46 +1,41 @@
@@ -37385,7 +38669,7 @@ index 3113133..eb85db3 100644
      const call = mocks.promptAsync.mock.calls[0] as [
        { body: { model: { providerID: string; modelID: string } } },
      ];
-@@ -699,3 +820,404 @@ describe('ForegroundFallbackManager resolveChain cross-agent isolation', () => {
+@@ -699,3 +820,406 @@ describe('ForegroundFallbackManager resolveChain cross-agent isolation', () => {
      expect(call[0].body.model.modelID).toBe('gpt-4o');
    });
  });
@@ -37650,7 +38934,9 @@ index 3113133..eb85db3 100644
 +
 +  test('notifies plugin-level session identity on orchestrator pivot', async () => {
 +    const { client } = createMockClient();
-+    const onSessionAgentChange = mock((_sessionID: string, _agent: string) => {});
++    const onSessionAgentChange = mock(
++      (_sessionID: string, _agent: string) => {},
++    );
 +    const mgr = new ForegroundFallbackManager(
 +      client,
 +      makeChains(),
@@ -41419,10 +42705,10 @@ index 0000000..597c391
 +  }
 +}
 diff --git a/src/index.ts b/src/index.ts
-index a4ed848..1af9c8f 100644
+index a4ed848..09a7712 100644
 --- a/src/index.ts
 +++ b/src/index.ts
-@@ -1,33 +1,31 @@
+@@ -1,33 +1,30 @@
  import type { Plugin } from '@opencode-ai/plugin';
 -import { createAgents, getAgentConfigs, getDisabledAgents } from './agents';
 -import { buildOrchestratorPrompt } from './agents/orchestrator';
@@ -41466,11 +42752,10 @@ index a4ed848..1af9c8f 100644
    createPostFileToolNudgeHook,
    createSessionGoalHook,
 -  createTaskSessionManagerHook,
-+
    createTodoContinuationHook,
    ForegroundFallbackManager,
  } from './hooks';
-@@ -50,12 +48,14 @@ import {
+@@ -50,12 +47,14 @@ import {
    createSubtaskTool,
    createWebfetchTool,
  } from './tools';
@@ -41486,7 +42771,7 @@ index a4ed848..1af9c8f 100644
  import { SubagentDepthTracker } from './utils/subagent-depth';
  import { collapseSystemInPlace } from './utils/system-collapse';
  
-@@ -82,6 +82,30 @@ async function appLog(
+@@ -82,6 +81,30 @@ async function appLog(
    }
  }
  
@@ -41517,7 +42802,7 @@ index a4ed848..1af9c8f 100644
  /** Minimum expected registrations for a healthy plugin load. */
  const HEALTH_CHECK = {
    minAgents: 5,
-@@ -104,11 +128,6 @@ async function probeJSDOM(): Promise<string | null> {
+@@ -104,11 +127,6 @@ async function probeJSDOM(): Promise<string | null> {
    }
  }
  
@@ -41529,7 +42814,7 @@ index a4ed848..1af9c8f 100644
  const OhMyOpenCodeLite: Plugin = async (ctx) => {
    const sessionId = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
    initLogger(sessionId);
-@@ -116,7 +135,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -116,7 +134,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
    // Declare variables that must survive the try/catch for the return
    // closure. These are set inside the try block.
    let config: ReturnType<typeof loadPluginConfig>;
@@ -41537,7 +42822,7 @@ index a4ed848..1af9c8f 100644
    let agentDefs: ReturnType<typeof createAgents>;
    let agents: ReturnType<typeof getAgentConfigs>;
    let mcps: ReturnType<typeof createBuiltinMcps>;
-@@ -127,11 +145,21 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -127,11 +144,21 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
    let depthTracker: SubagentDepthTracker;
    let multiplexerSessionManager: MultiplexerSessionManager;
    let autoUpdateChecker: ReturnType<typeof createAutoUpdateCheckerHook>;
@@ -41559,7 +42844,7 @@ index a4ed848..1af9c8f 100644
    let postFileToolNudgeHook: ReturnType<typeof createPostFileToolNudgeHook>;
    let chatHeadersHook: ReturnType<typeof createChatHeadersHook>;
    let delegateTaskRetryHook: ReturnType<typeof createDelegateTaskRetryHook>;
-@@ -140,10 +168,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -140,10 +167,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
    let foregroundFallback: ForegroundFallbackManager;
    let todoContinuationHook: ReturnType<typeof createTodoContinuationHook>;
    let sessionGoalHook: ReturnType<typeof createSessionGoalHook>;
@@ -41571,13 +42856,7 @@ index a4ed848..1af9c8f 100644
    let councilTools: Record<string, unknown>;
    let webfetch: ReturnType<typeof createWebfetchTool>;
    let rewriteDisplayNameMentions: ReturnType<
-@@ -152,31 +179,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
-   let subtaskCommandManager: ReturnType<typeof createSubtaskCommandManager>;
-   let subtaskState: ReturnType<typeof createSubtaskState>;
- 
-+
-   // Counters for post-init health check (set inside try, checked outside)
-   let toolCount = 0;
+@@ -157,26 +183,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
  
    try {
      config = loadPluginConfig(ctx.directory);
@@ -41604,7 +42883,7 @@ index a4ed848..1af9c8f 100644
      rewriteDisplayNameMentions = createDisplayNameMentionRewriter(config);
      agentDefs = createAgents(config);
      agents = getAgentConfigs(config);
-@@ -193,6 +201,24 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -193,6 +199,24 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          modelArrayMap[agentDef.name] = agentDef._modelArray;
        }
      }
@@ -41629,7 +42908,7 @@ index a4ed848..1af9c8f 100644
      // Build runtime fallback chains for all foreground agents. Each chain
      // is an ordered list of model strings to try when the current model is
      // rate-limited. Seeds from _modelArray entries (when the user
-@@ -234,9 +260,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -234,9 +258,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      // Get multiplexer instance for capability checks
      const multiplexer = getMultiplexer(multiplexerConfig);
      multiplexerEnabled =
@@ -41640,7 +42919,7 @@ index a4ed848..1af9c8f 100644
  
      log('[plugin] initialized with multiplexer config', {
        multiplexerConfig,
-@@ -250,6 +274,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -250,6 +272,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      }
  
      depthTracker = new SubagentDepthTracker();
@@ -41648,7 +42927,7 @@ index a4ed848..1af9c8f 100644
  
      // Initialize council tools (only when council is configured)
      councilTools = config.council
-@@ -271,9 +296,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -271,9 +294,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
  
      // Initialize auto-update checker hook
      autoUpdateChecker = createAutoUpdateCheckerHook(ctx, {
@@ -41662,7 +42941,7 @@ index a4ed848..1af9c8f 100644
      // Initialize phase reminder hook for workflow compliance
      phaseReminderHook = createPhaseReminderHook();
  
-@@ -285,8 +313,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -285,8 +311,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
  
      // Initialize post-file-tool nudge hook
      postFileToolNudgeHook = createPostFileToolNudgeHook({
@@ -41675,7 +42954,7 @@ index a4ed848..1af9c8f 100644
      });
  
      chatHeadersHook = createChatHeadersHook(ctx);
-@@ -304,6 +334,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -304,6 +332,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        runtimeChains,
        config.fallback?.enabled !== false &&
          Object.keys(runtimeChains).length > 0,
@@ -41686,7 +42965,7 @@ index a4ed848..1af9c8f 100644
      );
  
      // Initialize todo-continuation hook (opt-in auto-continue for
-@@ -317,16 +351,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -317,16 +349,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      sessionGoalHook = createSessionGoalHook(ctx, config, {
        getAgentName: (sessionID) => sessionAgentMap.get(sessionID),
      });
@@ -41704,7 +42983,7 @@ index a4ed848..1af9c8f 100644
  
      subtaskState = createSubtaskState();
      subtaskCommandManager = createSubtaskCommandManager(ctx, subtaskState);
-@@ -349,6 +376,11 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -349,6 +374,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      throw err;
    }
  
@@ -41712,11 +42991,10 @@ index a4ed848..1af9c8f 100644
 +    return sessionRootMap.get(sessionID) ?? sessionID;
 +  };
 +
-+
    // ── Health check: validate registrations ────────────────────────────
    const agentCount = Object.keys(agents).length;
    const mcpCount = Object.keys(mcps).length;
-@@ -393,8 +425,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -393,8 +422,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      }
    });
  
@@ -41725,7 +43003,7 @@ index a4ed848..1af9c8f 100644
    return {
      name: 'oh-my-opencode-slim',
  
-@@ -435,15 +465,17 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -435,15 +462,17 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
              name
            ] as Record<string, unknown> | undefined;
            if (existing) {
@@ -41751,7 +43029,7 @@ index a4ed848..1af9c8f 100644
            }
          }
        }
-@@ -506,17 +538,29 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -506,17 +535,29 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        }
  
        if (Object.keys(effectiveArrays).length > 0) {
@@ -41789,7 +43067,7 @@ index a4ed848..1af9c8f 100644
            const entry = configAgent[agentName] as
              | Record<string, unknown>
              | undefined;
-@@ -541,142 +585,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -541,142 +582,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          }
        }
  
@@ -41932,7 +43210,7 @@ index a4ed848..1af9c8f 100644
        // Merge MCP configs
        const configMcp = opencodeConfig.mcp as
          | Record<string, unknown>
-@@ -687,13 +595,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -687,13 +592,9 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          Object.assign(configMcp, mcps);
        }
  
@@ -41949,7 +43227,7 @@ index a4ed848..1af9c8f 100644
        for (const [agentName, agentConfig] of Object.entries(agents)) {
          const agentMcps = (agentConfig as { mcps?: string[] })?.mcps;
          if (!agentMcps) continue;
-@@ -711,21 +615,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -711,21 +612,10 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
            unknown
          >;
  
@@ -41975,7 +43253,7 @@ index a4ed848..1af9c8f 100644
  
          // Update agent config with permissions
          agentConfigEntry.permission = agentPermission;
-@@ -758,39 +651,21 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -758,39 +648,21 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        const event = input.event as {
          type: string;
          properties?: {
@@ -42022,7 +43300,7 @@ index a4ed848..1af9c8f 100644
          if (depthTracker && childSessionId && parentSessionId) {
            depthTracker.registerChild(parentSessionId, childSessionId);
          }
-@@ -827,11 +702,14 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -827,11 +699,14 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          },
        );
  
@@ -42039,7 +43317,7 @@ index a4ed848..1af9c8f 100644
            };
          },
        );
-@@ -848,59 +726,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -848,60 +723,6 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          },
        );
  
@@ -42096,10 +43374,11 @@ index a4ed848..1af9c8f 100644
 -            : false,
 -        });
 -      }
- 
+-
        if (input.event.type === 'session.deleted') {
          const props = input.event.properties as
-@@ -913,6 +738,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+           | { info?: { id?: string }; sessionID?: string }
+@@ -913,6 +734,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          }
          if (sessionID) {
            sessionAgentMap.delete(sessionID);
@@ -42107,7 +43386,7 @@ index a4ed848..1af9c8f 100644
          }
        }
      },
-@@ -930,27 +756,111 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -930,22 +752,105 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          },
        );
  
@@ -42225,13 +43504,7 @@ index a4ed848..1af9c8f 100644
      },
  
      // Direct interception of /auto-continue command — bypasses LLM
-     // round-trip
-     'command.execute.before': async (input, output) => {
-+
-       await todoContinuationHook.handleCommandExecuteBefore(
-         input as {
-           command: string;
-@@ -1009,9 +919,14 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1009,9 +914,14 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          output.message.agent = agent;
        }
  
@@ -42246,7 +43519,7 @@ index a4ed848..1af9c8f 100644
        todoContinuationHook.handleChatMessage({
          sessionID: input.sessionID,
          agent,
-@@ -1031,7 +946,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1031,7 +941,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        const agentName = input.sessionID
          ? sessionAgentMap.get(input.sessionID)
          : undefined;
@@ -42255,7 +43528,7 @@ index a4ed848..1af9c8f 100644
          const alreadyInjected = output.system.some(
            (s) =>
              typeof s === 'string' &&
-@@ -1040,18 +955,19 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1040,18 +950,19 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
          );
          if (!alreadyInjected) {
            // Prepend the orchestrator prompt to the system array. Use the
@@ -42281,7 +43554,7 @@ index a4ed848..1af9c8f 100644
            output.system[0] =
              orchestratorPrompt +
              (output.system[0] ? `\n\n${output.system[0]}` : '');
-@@ -1059,6 +975,12 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1059,6 +970,11 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        }
  
        sessionGoalHook.handleSystemTransform(input, output);
@@ -42290,19 +43563,10 @@ index a4ed848..1af9c8f 100644
 +        input,
 +        output,
 +      );
-+
  
        // Collapse to single system message for provider compatibility.
        // Some providers (e.g. Qwen via VLLM/DashScope) reject multiple
-@@ -1087,6 +1009,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
-         }>;
-       };
- 
-+
-       for (const message of typedOutput.messages) {
-         if (message.info.role !== 'user') {
-           continue;
-@@ -1107,17 +1030,13 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1107,17 +1023,13 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
        processImageAttachments({
          messages: typedOutput.messages,
          workDir: ctx.directory,
@@ -42321,7 +43585,7 @@ index a4ed848..1af9c8f 100644
        await phaseReminderHook['experimental.chat.messages.transform'](
          input,
          typedOutput,
-@@ -1131,92 +1050,43 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
+@@ -1131,92 +1043,43 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
      // Post-tool hooks: retry guidance for delegation errors + file-tool
      // nudge
      'tool.execute.after': async (input, output) => {
@@ -42352,11 +43616,8 @@ index a4ed848..1af9c8f 100644
 -          input as { tool: string },
 -          output as { output: unknown },
 -        ),
-+      await delegateTaskRetryHook['tool.execute.after'](
-+        input as { tool: string },
-+        output as { output: unknown },
-       );
- 
+-      );
+-
 -      await runPostToolHook('json-error-recovery', () =>
 -        jsonErrorRecoveryHook['tool.execute.after'](
 -          input as {
@@ -42370,8 +43631,11 @@ index a4ed848..1af9c8f 100644
 -            metadata: unknown;
 -          },
 -        ),
--      );
--
++      await delegateTaskRetryHook['tool.execute.after'](
++        input as { tool: string },
++        output as { output: unknown },
+       );
+ 
 -      await runPostToolHook('todo-continuation', () =>
 -        todoContinuationHook.handleToolExecuteAfter(
 -          input as {
@@ -42444,6 +43708,53 @@ index a4ed848..1af9c8f 100644
      },
    };
  };
+diff --git a/src/multiplexer/tmux/index.test.ts b/src/multiplexer/tmux/index.test.ts
+index cb7697f..c82db2a 100644
+--- a/src/multiplexer/tmux/index.test.ts
++++ b/src/multiplexer/tmux/index.test.ts
+@@ -11,6 +11,11 @@ type SpawnResult = {
+ 
+ const logMock = mock(() => {});
+ const crossSpawnMock = mock((_command: string[]) => createSpawnResult());
++const binaryLookupCommand = process.platform === 'win32' ? 'where' : 'which';
++const tmuxBinary =
++  process.platform === 'win32' ? 'C:\\tools\\tmux.exe' : '/usr/bin/tmux';
++const binaryLookupStdout =
++  process.platform === 'win32' ? `${tmuxBinary}\r\n` : `${tmuxBinary}\n`;
+ 
+ mock.module('../../utils/logger', () => ({
+   log: logMock,
+@@ -60,8 +65,8 @@ describe('TmuxMultiplexer', () => {
+     logMock.mockClear();
+     crossSpawnMock.mockReset();
+     crossSpawnMock.mockImplementation((command: string[]) => {
+-      if (command[0] === 'which')
+-        return createSpawnResult(0, '/usr/bin/tmux\n');
++      if (command[0] === binaryLookupCommand)
++        return createSpawnResult(0, binaryLookupStdout);
+       if (command[1] === '-V') return createSpawnResult(0, 'tmux 3.6a');
+       if (command[1] === 'split-window') {
+         return createSpawnResult(0, '%2\n');
+@@ -116,8 +121,8 @@ describe('TmuxMultiplexer', () => {
+     const tmux = new TmuxMultiplexer('main-vertical', 60);
+ 
+     crossSpawnMock.mockImplementation((command: string[]) => {
+-      if (command[0] === 'which')
+-        return createSpawnResult(0, '/usr/bin/tmux\n');
++      if (command[0] === binaryLookupCommand)
++        return createSpawnResult(0, binaryLookupStdout);
+       if (command[1] === '-V') return createSpawnResult(0, 'tmux 3.6a');
+       if (command.includes('select-layout')) {
+         return createSpawnResult(1, '', 'layout failed');
+@@ -132,7 +137,7 @@ describe('TmuxMultiplexer', () => {
+     ).toHaveLength(0);
+     expect(logMock).toHaveBeenCalledWith('[tmux] command failed', {
+       command: 'select-layout',
+-      args: ['/usr/bin/tmux', 'select-layout', '-t', '%1', 'main-vertical'],
++      args: [tmuxBinary, 'select-layout', '-t', '%1', 'main-vertical'],
+       exitCode: 1,
+       stderr: 'layout failed',
+     });
 diff --git a/src/tui.test.ts b/src/tui.test.ts
 deleted file mode 100644
 index d1c8c9c..0000000
@@ -43053,10 +44364,10 @@ index 0000000..8e41650
 +}
 diff --git a/src/utils/orchestrator-identity.test.ts b/src/utils/orchestrator-identity.test.ts
 new file mode 100644
-index 0000000..d45eea1
+index 0000000..71ca595
 --- /dev/null
 +++ b/src/utils/orchestrator-identity.test.ts
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,112 @@
 +import { describe, expect, test } from 'bun:test';
 +import {
 +  ANTHROPIC_PRIMARY_MODEL,
@@ -43100,7 +44411,6 @@ index 0000000..d45eea1
 +  test('returns false for "orchestrator-beta"', () => {
 +    expect(isAnthropicPrimaryOrchestrator('orchestrator-beta')).toBe(false);
 +  });
-+
 +
 +  test('returns false for "orchestrator-delta"', () => {
 +    expect(isAnthropicPrimaryOrchestrator('orchestrator-delta')).toBe(false);
@@ -43172,10 +44482,10 @@ index 0000000..d45eea1
 +});
 diff --git a/src/utils/orchestrator-identity.ts b/src/utils/orchestrator-identity.ts
 new file mode 100644
-index 0000000..74e925f
+index 0000000..9ac092f
 --- /dev/null
 +++ b/src/utils/orchestrator-identity.ts
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,71 @@
 +/**
 + * Identity-driven Anthropic fallback constants and helpers.
 + *
@@ -43244,10 +44554,8 @@ index 0000000..74e925f
 + * auto-continuation when the root session is anything other than the literal
 + * `orchestrator`.
 + */
-+export function isOrchestratorAgent(
-+  agentName: string | undefined,
-+): boolean {
-+  return agentName !== undefined && agentName.startsWith('orchestrator');
++export function isOrchestratorAgent(agentName: string | undefined): boolean {
++  return agentName?.startsWith('orchestrator') ?? false;
 +}
 diff --git a/src/utils/session.test.ts b/src/utils/session.test.ts
 index d26ec43..ca92ab6 100644
